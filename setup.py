@@ -9,7 +9,7 @@ setup(
     description="Time Series Forecasting of Chaotic Dynamical Systems",
     author='Lucas Wilson',
     author_email='lkwilson96@gmail.com',
-    url='https://github.com/larkwt96',
+    url='https://github.com/larkwt96/honors-thesis',
     install_requires=['numpy', 'pygame', 'torch', 'torchvision', 'matplotlib'],
     packages=['echonn'],
     package_dir={'echonn': 'src/echonn'},
