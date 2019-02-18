@@ -1,5 +1,6 @@
 import numpy as np
 from .system import DynamicalSystem
+from scipy.constants import g
 
 
 class DoublePendulumSystem(DynamicalSystem):
@@ -7,11 +8,10 @@ class DoublePendulumSystem(DynamicalSystem):
     Equal mass and equal length
     """
 
-    def __init__(self, m=1, l=1, g=10):  # TODO: get g
+    def __init__(self, m=1, l=1):
         super().__init__(4, 'BDF')
         self.m = m
         self.l = l
-        self.g = g
 
         self._theta_pre = 6 / (m*l**2)
         self._gl = g / l
@@ -20,7 +20,6 @@ class DoublePendulumSystem(DynamicalSystem):
 
     def fun(self, t, v):
         a1, a2, p1, p2 = v
-        g = self.g
 
         # a1p, a2p
         cosa1a2 = np.cos(a1 - a2)
