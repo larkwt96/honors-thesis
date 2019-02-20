@@ -15,7 +15,6 @@ class SystemSolver:
         if not method_given and system_has_method:
             kwargs['method'] = self.system.method
         results = solve_ivp(self.system.fun, t_span, y0, *args, **kwargs)
-        # TODO: graph on top of other graphs
         run = {
             'results': results,
             'index': len(self._runs),
@@ -37,7 +36,7 @@ class SystemSolver:
         else:
             return run
 
-    def plot2d(self, run=None, fig=None, *args, **kwargs):
+    def plot2d(self, run=None, fig=None):
         run = self.get_last_run(run)
         res = run['results']
         if fig is None:
@@ -46,10 +45,9 @@ class SystemSolver:
             fig = plt.figure(fig.number)
         plt.plot(*res.y, '-')
         plt.tight_layout()
-        plt.show(*args, **kwargs)
-        return plt, fig
+        return fig
 
-    def plot3d(self, run=None, fig=None, *args, **kwargs):
+    def plot3d(self, run=None, fig=None):
         run = self.get_last_run(run)
         res = run['results']
         if fig is None:
@@ -60,10 +58,9 @@ class SystemSolver:
             ax,  = fig.get_axes()
         ax.plot(*res.y, '-')
         plt.tight_layout()
-        plt.show(*args, **kwargs)
-        return plt, fig
+        return fig
 
-    def plotnd(self, run=None, fig=None, *args, **kwargs):
+    def plotnd(self, run=None, fig=None):
         run = self.get_last_run(run)
         sys_num = run['index']
         res = run['results']
@@ -87,5 +84,4 @@ class SystemSolver:
             overlay.plot(res.t, y, label=label)
         overlay.legend()
         plt.tight_layout()
-        plt.show(*args, **kwargs)
-        return plt, fig
+        return fig
