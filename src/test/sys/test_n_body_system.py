@@ -15,8 +15,8 @@ class TestModel(unittest.TestCase):
         rreal = vreal[:mass*dim].reshape(mass, dim)
         preal = vreal[mass*dim:].reshape(mass, dim)
 
-        r, p = system.unpack_ham(vreal)
-        v = system.pack_ham(rreal, preal)
+        r, p = system.unpack(vreal)
+        v = system.pack(rreal, preal)
         self.assertTrue(np.all(np.isclose(r, rreal)))
         self.assertTrue(np.all(np.isclose(p, preal)))
         self.assertTrue(np.all(np.isclose(v, vreal)))
@@ -40,7 +40,7 @@ class TestModel(unittest.TestCase):
     def slowNBodyGradientCalc(self, v, masses, body_dim):
         v = np.array(v, dtype=np.float64)
         body_system = NBodySystem(masses, body_dim)
-        r, p = body_system.unpack_ham(v)
+        r, p = body_system.unpack(v)
 
         # pos derivative
         rp = np.zeros_like(r)

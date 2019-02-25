@@ -21,13 +21,13 @@ class NBodySystem(DynamicalSystem):
         # The mass of each bodies
         self.body_masses = body_masses
 
-    def unpack_ham(self, v):
+    def unpack(self, v):
         half = self.dim // 2
         r = v[:half].reshape(self.body_count, self.body_dim)
         p = v[half:].reshape(self.body_count, self.body_dim)
         return r, p
 
-    def pack_ham(self, r, p):
+    def pack(self, r, p):
         return np.concatenate((r.reshape(-1), p.reshape(-1)))
 
     def fun(self, t, v):
@@ -43,7 +43,7 @@ class NBodySystem(DynamicalSystem):
         # p' = -G diag(m) sum j!=i of m_j (r_i - r_j) / |r_i - r_j|^3
 
         #  where r_i is the ith row of the R matrix
-        r, p = self.unpack_ham(v)
+        r, p = self.unpack(v)
         m = self.body_masses
 
         # position derivative
@@ -62,4 +62,4 @@ class NBodySystem(DynamicalSystem):
         pp = (mass_gravity * acc).sum(axis=1)
 
         # pack and return
-        return self.pack_ham(rp, pp)
+        return self.pack(rp, pp)
