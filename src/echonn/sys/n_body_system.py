@@ -22,7 +22,7 @@ class NBodySystem(DynamicalSystem):
         self.body_masses = body_masses
 
     def unpack_ham(self, v):
-        half = self.dim / 2
+        half = self.dim // 2
         r = v[:half].reshape(self.body_count, self.body_dim)
         p = v[half:].reshape(self.body_count, self.body_dim)
         return r, p
@@ -31,6 +31,9 @@ class NBodySystem(DynamicalSystem):
         return np.concatenate((r.reshape(-1), p.reshape(-1)))
 
     def fun(self, t, v):
+        """
+        make sure v is of type np.float64
+        """
         # Just do the rename variables and differentiate thing. Make system the
         # Lagrangian and Hamiltonian:
         #     y1 = r (position)
@@ -38,6 +41,7 @@ class NBodySystem(DynamicalSystem):
         #
         # r' = diag(m) P
         # p' = -G diag(m) sum j!=i of m_j (r_i - r_j) / |r_i - r_j|^3
+
         #  where r_i is the ith row of the R matrix
         r, p = self.unpack_ham(v)
         m = self.body_masses
