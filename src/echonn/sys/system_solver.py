@@ -1,7 +1,7 @@
-from scipy.integrate import solve_ivp
+import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
+from scipy.integrate import solve_ivp
 
 
 class SystemSolver:

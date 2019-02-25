@@ -1,8 +1,8 @@
 import os
 import unittest
-import numpy as np
-import echonn
 
+import echonn
+import numpy as np
 
 
 class TestModel(unittest.TestCase):
@@ -11,6 +11,6 @@ class TestModel(unittest.TestCase):
 
     def tearDown(self):
         pass
-    
+
     def testSomething(self):
         pass

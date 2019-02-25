@@ -1,10 +1,11 @@
-import numpy as np
-from .system import DynamicalSystem
-from scipy.constants import g, pi
 import matplotlib
-from matplotlib import gridspec
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import gridspec
 from matplotlib.colors import ListedColormap
+from scipy.constants import g, pi
+
+from .system import DynamicalSystem
 
 
 class DoublePendulumSystem(DynamicalSystem):

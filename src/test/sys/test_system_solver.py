@@ -1,10 +1,10 @@
 import unittest
-import numpy as np
-from .sys_util import clearFigs
+
 import matplotlib.pyplot as plt
-from echonn.sys import LorenzSystem
-from echonn.sys import CircleSystem
-from echonn.sys import SystemSolver
+import numpy as np
+from echonn.sys import CircleSystem, LorenzSystem, SystemSolver
+
+from .sys_util import clearFigs
 
 
 class TestModel(unittest.TestCase):

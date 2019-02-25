@@ -1,7 +1,6 @@
 import unittest
-from echonn.sys import SystemSolver
-from echonn.sys import CircleSystem
-from echonn.sys import LorenzSystem
+
+from echonn.sys import CircleSystem, LorenzSystem, SystemSolver
 
 
 class TestModel(unittest.TestCase):

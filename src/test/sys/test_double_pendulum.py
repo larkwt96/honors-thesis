@@ -1,9 +1,10 @@
 import unittest
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+from echonn.sys import DoublePendulumSystem, SystemSolver
+
 from .sys_util import clearFigs
-from echonn.sys import DoublePendulumSystem
-from echonn.sys import SystemSolver
 
 
 class TestModel(unittest.TestCase):

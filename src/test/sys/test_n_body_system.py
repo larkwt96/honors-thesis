@@ -1,7 +1,8 @@
 import unittest
+
 import numpy as np
-from scipy.constants import G
 from echonn.sys import NBodySystem, SystemSolver
+from scipy.constants import G
 
 
 class TestModel(unittest.TestCase):
