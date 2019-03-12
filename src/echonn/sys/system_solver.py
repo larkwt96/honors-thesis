@@ -1,3 +1,5 @@
+import math
+
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
@@ -60,16 +62,22 @@ class SystemSolver:
         plt.tight_layout()
         return fig
 
-    def plotnd(self, run=None, fig=None):
+    def plotnd(self, run=None, fig=None, figsize=None, legend=False):
+        """ warning legend=True is going to mess up the layout. The legend can be seen by the side of the mini graph. """
         run = self.get_last_run(run)
         sys_num = run['index']
         res = run['results']
 
         if fig is None:
-            fig = plt.figure()
+            max_rows = 8
             num_plots = res.y.shape[0] + 1  # +1 for the overlay
+            rows = min(max_rows, num_plots)
+            cols = max(1, math.ceil(num_plots/max_rows))
+            if num_plots > max_rows:
+                figsize = (7*cols/2, 5*rows/4)
+            fig = plt.figure(figsize=figsize)
             for i in range(num_plots):
-                plt.subplot(num_plots, 1, i + 1)
+                plt.subplot(rows, cols, i + 1)
         else:
             fig = plt.figure(fig.number)
         plots = fig.get_axes()
@@ -82,6 +90,7 @@ class SystemSolver:
             plots[i].set_ylabel('dim {}'.format(i))
             label = 'sys {} dim {}'.format(sys_num, i)
             overlay.plot(res.t, y, label=label)
-        overlay.legend()
+        if legend:
+            overlay.legend()
         plt.tight_layout()
         return fig
