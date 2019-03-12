@@ -1,8 +1,10 @@
 import unittest
 
+import matplotlib.pyplot as plt
 import numpy as np
 from echonn.sys import NBodySystem, SystemSolver
 from scipy.constants import G
+from .sys_util import clearFigs
 
 
 class TestModel(unittest.TestCase):
@@ -100,3 +102,16 @@ class TestModel(unittest.TestCase):
         self.assertTrue(np.all(np.isclose(rpreal, rpsys, atol=self.atol)))
         self.assertTrue(np.all(np.isclose(ppsys, pp, atol=self.atol)))
         self.assertTrue(np.all(np.isclose(vp, vpsys, atol=self.atol)))
+
+    def testPlot(self):
+        sys = NBodySystem()
+        solver = SystemSolver(sys)
+        tspan = [0, 100]
+        y0 = np.zeros(2*sys.body_dim*len(sys.body_masses))
+        y0[0:3] = [0, 0, 0]
+        y0[3:6] = [3, 1, 3]
+        y0[6:9] = [0, 2, 0]
+        run = solver.run(tspan, y0)
+        clearFigs()
+        solver.plotnd(run)
+        #plt.show(True)

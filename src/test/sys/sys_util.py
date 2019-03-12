@@ -5,6 +5,7 @@ def clearFigs():
     # TODO: it doesn't want to close figures, and I don't know why. In the
     # mean time, I will just clear the figure, and the non blank figure is
     # the one you want.
+    # return  # global disable
     for fignum in plt.get_fignums():
         plt.figure(fignum)
         plt.clf()

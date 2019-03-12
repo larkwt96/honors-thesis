@@ -1,10 +1,12 @@
+import matplotlib.pyplot as plt
 import numpy as np
-from .system import DynamicalSystem
 from scipy.constants import G
+
+from .system import DynamicalSystem
 
 
 class NBodySystem(DynamicalSystem):
-    def __init__(self, body_masses=[1, 2, 3], body_dim=3):
+    def __init__(self, body_masses=[1, 1.1, 1.2], body_dim=3):
         """
         Warning: changing the body_dim from 3 will work, but the physics
         probably isn't right since it will use the squared distance instead
@@ -17,9 +19,17 @@ class NBodySystem(DynamicalSystem):
         # Number of bodies
         self.body_count = body_count
         # Dimension of bodies (3rd or 2nd make the most sense)
-        self.body_dim = body_dim
+        self._body_dim = body_dim
         # The mass of each bodies
-        self.body_masses = body_masses
+        self._body_masses = body_masses
+
+    @property
+    def body_dim(self):
+        return self._body_dim
+
+    @property
+    def body_masses(self):
+        return self._body_masses
 
     def unpack(self, v):
         half = self.dim // 2
@@ -63,3 +73,45 @@ class NBodySystem(DynamicalSystem):
 
         # pack and return
         return self.pack(rp, pp)
+
+    def render_fade_trail2d(self, run, fig=None):
+        # load figure
+        if fig is None:
+            fig = plt.figure()
+        else:
+            plt.figure(fig.number)
+
+    def render_fade_trail3d(self, run, fig=None):
+        # load figure
+        if fig is None:
+            fig = plt.figure()
+        else:
+            plt.figure(fig.number)
+
+    def render_time_frame(self, t, y, fig, time=1):
+        pass
+
+    def render_fade_trail(self, run, fig=None, base_size=10):
+        # select dim
+        res = run['results']
+        sys = run['system']
+        if sys.dim == 1:
+            msg = "while possible, can't yet"
+            raise NotImplementedError(msg)
+        elif sys.dim == 2:
+            self.render_fade_trail2d(run, fig)
+        elif sys.dim == 3:
+            self.render_fade_trail3d(run, fig)
+        else:
+            raise Exception("Can't render {}th dimension")
+
+        # get data from run
+        t = res.t
+        y = res.y
+        dim = sys.body_dim
+
+        """
+        tmask = np.where((time - 1 <= t) & (t <= time))
+        body_pos = y[:dim//2, tmask].reshape(-1, dim)
+        r, p = sys.unpack(y)
+        """
