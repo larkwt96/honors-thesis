@@ -103,6 +103,7 @@ class DoublePendulumSystem(DynamicalSystem):
         return fig
 
     def render_trail(self, run, fig=None, limit_margin=.1, time=1):
+        """ faster than fade trail """
         # get figure
         if fig is None:
             fig = plt.figure()
@@ -136,6 +137,7 @@ class DoublePendulumSystem(DynamicalSystem):
         return fig
 
     def render_path(self, run, fig=None, limit_margin=.1, dot_size=25):
+        """ render basic path """
         # get data from run
         t = run['results'].t
         _, _, inner_moment, outer_moment = run['results'].y
