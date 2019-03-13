@@ -114,4 +114,4 @@ class TestModel(unittest.TestCase):
         run = solver.run(tspan, y0)
         clearFigs()
         solver.plotnd(run)
-        #plt.show(True)
+        # plt.show(True)

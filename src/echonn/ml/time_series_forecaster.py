@@ -1,0 +1,2 @@
+class TimeSeriesForecaster:
+    pass
