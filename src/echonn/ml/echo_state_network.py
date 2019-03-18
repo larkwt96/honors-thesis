@@ -1,9 +1,10 @@
 import numpy as np
 from numpy import linalg as LA
 from .tools import init_weights
+from .time_series_forecaster import TimeSeriesForecaster
 
 
-class EchoStateNetwork:
+class EchoStateNetwork(TimeSeriesForecaster):
     def __init__(self, K, N, L, T0=50, alpha=.8, use_noise=False, f=None, g=None, g_inv=None):
         """
         K - input units, u
@@ -53,12 +54,6 @@ class EchoStateNetwork:
         self.w, self.Ws = init_weights(self.shapes)
         self.Win, self.W, self.Wout, self.Wback = self.Ws
         self.normalize_weight()  # max eigenvalue set to alpha
-
-    @staticmethod
-    def scale_matrix(W):
-        if W.shape[1] == 0:
-            return W  # no matrix to scale
-        return W / np.sqrt(W.shape[1])
 
     def normalize_weight(self):
         eigenvalues, _ = LA.eig(self.W)
@@ -112,10 +107,6 @@ class EchoStateNetwork:
         test_rmse = self.rmse(test_d, test_y)
         return (train_d, train_y, train_rmse), (test_d, test_y, test_rmse)
 
-    def rmse(self, x, y):
-        num_samples = x.shape[0]
-        return np.sqrt(np.sum((x-y)**2) / num_samples)
-
     def predict(self, ds=None, us=None, Tf=None):
         """
         ds defaults to an empty array and there will be no data to initialize
@@ -167,7 +158,8 @@ class EchoStateNetwork:
                 self.y = np.append(self.y, [self.calc_y(n)], axis=0)
         return self.y[1:]
 
-    def fill_with_zeros(self, vs, dim):
+    @staticmethod
+    def fill_with_zeros(vs, dim):
         vs = [np.zeros(dim) if v is None else np.array(v) for v in vs]
         return np.array(vs).reshape(len(vs), dim)
 
