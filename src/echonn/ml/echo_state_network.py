@@ -4,7 +4,7 @@ from .tools import init_weights
 
 
 class EchoStateNetwork:
-    def __init__(self, K, N, L, T0=100, alpha=.999, use_noise=False, sparse=False, f=None, g=None, g_inv=None):
+    def __init__(self, K, N, L, T0=50, alpha=.8, use_noise=False, f=None, g=None, g_inv=None):
         """
         K - input units, u
         N - internal units, x
@@ -25,7 +25,6 @@ class EchoStateNetwork:
         self.T0 = T0  # at T0, x[T0] has stabilized
         self.alpha = alpha
         self.use_noise = use_noise  # TODO add noise to sampling
-        self.sparse = sparse  # TODO make weight matrix sparse
         self.w = None
         self.Ws = None
         self.Win = None
@@ -39,7 +38,7 @@ class EchoStateNetwork:
         else:
             self.g = g
             if g_inv is None:
-                raise Exception('g_inv must be specified')
+                raise Exception('g_inv must be specified with g')
             self.g_inv = g_inv
 
         # set on train
@@ -55,14 +54,15 @@ class EchoStateNetwork:
         self.Win, self.W, self.Wout, self.Wback = self.Ws
         self.normalize_weight()  # max eigenvalue set to alpha
 
-    def scale_matrix(self, W):
+    @staticmethod
+    def scale_matrix(W):
         if W.shape[1] == 0:
             return W  # no matrix to scale
         return W / np.sqrt(W.shape[1])
 
     def normalize_weight(self):
         eigenvalues, _ = LA.eig(self.W)
-        max_eigenvalue = max(eigenvalues)
+        max_eigenvalue = max(np.absolute(eigenvalues))
         self.Win[:, :] = self.scale_matrix(self.Win)
         self.Wout[:, :] = self.scale_matrix(self.Wout)
         self.Wback[:, :] = self.scale_matrix(self.Wback)
@@ -93,66 +93,118 @@ class EchoStateNetwork:
         u = self.u
         x = self.x
 
-        system_state = np.concatenate(u[n], x[n])  # not y[n-1]
-        g(Wout @ system_state)
+        system_state = np.concatenate((u[n], x[n]))
+        return g(Wout @ system_state)
 
-    def predict(self, us=None, Tf=None):
+    def score(self, ds, ys, T, Tf=None, T0=None):
+        """
+        ys should be what was returned by predict
+        """
+        if T0 is None:
+            T0 = self.T0
+        ds = self.fill_with_zeros(ds, self.L)
+        ys = self.fill_with_zeros(ys, self.L)
+        train_d = ds[T0:T]
+        train_y = ys[T0:T]
+        train_rmse = self.rmse(train_d, train_y)
+        test_d = ds[T:Tf]
+        test_y = ys[T:Tf]
+        test_rmse = self.rmse(test_d, test_y)
+        return (train_d, train_y, train_rmse), (test_d, test_y, test_rmse)
+
+    def rmse(self, x, y):
+        num_samples = x.shape[0]
+        return np.sqrt(np.sum((x-y)**2) / num_samples)
+
+    def predict(self, ds=None, us=None, Tf=None):
+        """
+        ds defaults to an empty array and there will be no data to initialize
+        the reservoir. It will use the provided ds until it runs out. Then,
+        it will calculate ds from the model until it reaches Tf.
+
+        us defaults to the zero array extended to reach Tf
+        (this is for when the model doesn't use input data.)
+
+        Tf defaults to the length of us but can be set manually. It will stop
+        at Tf. If Tf is larger than u, then u is filled with zeros. If Tf is
+        less than u, it will stop before the end of u is reached (so you can
+        specify more us than Tfs).
+        """
+        # set y
+        if ds is None:
+            ds = np.zeros((0, self.L))
+        else:
+            ds = self.fill_with_zeros(ds, self.L)
+        self.y = np.insert(ds, 0, 0, axis=0)
+
+        # init u
         if us is None and Tf is None:
             raise Exception('Must specify Tf or us')
-        # format us
+
         if us is None:
-            us = np.zeros((Tf-self.T, self.K))
+            us = np.zeros((Tf, self.K))
         else:
-            us = np.array(us).reshape(-1, self.K)
-        # format Tf
+            us = self.fill_with_zeros(us, self.K)
+
         if Tf is None:
-            Tf = self.T + us.shape[0]
+            Tf = us.shape[0]
         else:
-            zeros = np.zeros((Tf - self.T - us.shape[0], self.K))
-            us = np.vstack((us, zeros))
-        self.u = np.vstack((self.u, us))
+            num_us = max(Tf, us.shape[0])
+            us_new = np.zeros((num_us, self.K))
+            us_new[:us.shape[0]] = us
+            us = us_new
+        self.u = np.insert(us, 0, 0, axis=0)
+
+        # init x
+        self.x = np.zeros((1, self.N))
+
+        # feed x and y
         # predict
-        for n in range(self.n+1, Tf+1):
+        for n in range(1, Tf+1):
             self.n = n
-            np.append(self.x, self.calc_x(n), axis=0)
-            np.append(self.y, self.calc_y(n), axis=0)
+            self.x = np.append(self.x, [self.calc_x(n)], axis=0)
+            if self.y.shape[0] <= n:
+                self.y = np.append(self.y, [self.calc_y(n)], axis=0)
+        return self.y[1:]
 
-    def train(self, ds, us=None):
-        """
-        u must be indexable and store a numpy array. if K =0 or u = 0 for all
-        n, then us can be omitted.
-        """
-        # fill missing points with zeros
-        ds = [np.zeros(self.L) if d is None else np.array(d) for d in ds]
-        # convert to numpy
-        ds = np.array(ds).reshape(len(ds), self.L)
+    def fill_with_zeros(self, vs, dim):
+        vs = [np.zeros(dim) if v is None else np.array(v) for v in vs]
+        return np.array(vs).reshape(len(vs), dim)
 
-        # reshape or fill passed input data
+    def fit(self, ds, us=None, reinit_weights=False):
+        """
+        us defaults to zeros the length of ds. This is useful when the model
+        doesn't use input data. if use is provided then it must be the same
+        length as ds.
+
+        reinit_weights set to True will reinitialize the weights to random
+        before fitting. Otherwise, multiple runs does nothing (but reset the
+        output layer to the same calculated solution).
+        """
+        # step 1: initialize weights
+        if reinit_weights:
+            self.init_weights()
+
+        # step 2
+        ds = self.fill_with_zeros(ds, self.L)
         if us is None:
             us = np.zeros((ds.shape[0], self.K))
         else:
-            us = [np.zeros(self.K) if u is None else np.array(u) for u in us]
-            us = np.array(us).reshape(len(us), self.K)
-        self.u = np.insert(us, 0, 0, axis=0)  # make 1 indexed
+            us = self.fill_with_zeros(us, self.K)
+        if ds.shape[0] != us.shape[0]:
+            raise Exception('ds and us shapes don\'t match')
+        self.u = np.insert(us, 0, 0, axis=0)
+        self.y = np.insert(ds, 0, 0, axis=0)
 
-        self.y = np.zeros_like(self.u)  # build output layer with same shape
-        # test the shape of passed ds
-        # fill trailing missing points with zeros also
-        self.y[1:1+ds.shape[0]] = ds
+        # initialize network state
         self.x = [np.zeros(self.N)]
-
-        # step 1: initialize weights
-        # done in init
-
-        # step 2
-        # sample the network with forced teacher
-        # M = state (time x state)
-        # T = target (time x target)
         for n in range(1, self.u.shape[0]):
             self.n = n
             self.x.append(self.calc_x(n))
         self.x = np.array(self.x).reshape(-1, self.N)
+
         self.T = self.n
+
         # T = 0 is at index 1, so T0 = 10 means T = 10 is good, so we want
         # index 11 and on.
         #
@@ -167,7 +219,7 @@ class EchoStateNetwork:
 
         # step 3
         # solve for Wout = (inv(M) T).T
-        self.Wout[:, :] = (LA.inv(M) @ T).T
+        self.Wout[:, :] = (LA.pinv(M) @ T).T
 
 
 '''
