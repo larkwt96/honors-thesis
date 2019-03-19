@@ -12,6 +12,7 @@ class TestModel(unittest.TestCase):
         # test data
         self.pendulum_system = DoublePendulumSystem()
         self.pendulum_solver = SystemSolver(self.pendulum_system)
+        self.run_dp_render = False
 
     def testDoublePendulum(self):
         clearFigs()
@@ -22,16 +23,17 @@ class TestModel(unittest.TestCase):
         # plt.show(True)
 
         clearFigs()
-        system = DoublePendulumSystem()
-        fig = system.render_path(run, dot_size=2)
-        system.render_path(run2, fig=fig, dot_size=2)
-        # plt.show(True)
+        if self.run_dp_render:
+            system = DoublePendulumSystem()
+            fig = system.render_path(run, dot_size=2)
+            system.render_path(run2, fig=fig, dot_size=2)
+            plt.show(True)
 
     def testDoublePendulumFade(self):
         clearFigs()
         run = self.pendulum_solver.run([0, 5], [.2, 1, 0, 0])
         system = DoublePendulumSystem()
-        if False:
+        if self.run_dp_render:
             fig = system.render_fade_trail(run)
             plt.show(False)
             step = .02
@@ -44,7 +46,7 @@ class TestModel(unittest.TestCase):
         clearFigs()
         run = self.pendulum_solver.run([0, 10], [.2, 1, 0, 0])
         system = DoublePendulumSystem()
-        if False:
+        if self.run_dp_render:
             fig = system.render_trail(run, time=.5)
             plt.show(False)
             step = .05
@@ -57,7 +59,7 @@ class TestModel(unittest.TestCase):
         clearFigs()
         run = self.pendulum_solver.run([0, 10], [.2, 1, 0, 3])
         system = DoublePendulumSystem()
-        if False:
+        if self.run_dp_render:
             fig = system.render_trail(run, time=.5)
             plt.show(False)
             step = .05

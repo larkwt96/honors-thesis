@@ -6,15 +6,16 @@ from abc import ABC, abstractmethod
 
 
 class Animator(ABC):
-    def __init__(self, t, y, trail_length):
+    def __init__(self, trail_length=1, max_t=10):
         """
         trail_length in time, not dist
+        max_t should be set by implementer
         """
-        self.t = t
-        self.y = y
         self.anim = None
         self.trail_length = trail_length
         self.ms_per_frame = 50
+        self.max_t = max_t
+        self.nFrames = self.calc_frames(max_t)
 
     @abstractmethod
     def init_plot(self):
@@ -23,20 +24,23 @@ class Animator(ABC):
         """
         fig = plt.figure()
         data, *_ = plt.plot([1, 2, 3])[0]
+        # fig, self.lines = (figure, [line1, line2, line3, ...])
         return fig, [data]
 
     @abstractmethod
     def animator(self, framei):
-        t, y = self.get_data(framei)
+        # t, y = self.get_data(framei)
         # do somethign with self.lines
+        pass
+
+    def calc_frames(self, max_t):
+        return int(max_t * 1000 / self.ms_per_frame)
 
     def render(self):
-        # plotter stuff
-        nFrames = int(self.t[-1] * 1000 / self.ms_per_frame)
         fig, self.lines = self.init_plot()
         self.anim = animation.FuncAnimation(fig,
                                             self.animator,
-                                            frames=nFrames,
+                                            frames=self.nFrames,
                                             interval=self.ms_per_frame,
                                             blit=False)
 
@@ -52,8 +56,16 @@ class Animator(ABC):
         rc('animation', embed_limit=50)
         return self.anim
 
-    def get_data(self, frame_i):
+    def get_data(self, frame_i, t, y):
+        start_time, end_time = self.get_data_t_span(frame_i)
+        mask = self.get_data_mask(start_time, end_time, t)
+        return t[mask], y[mask]
+
+    def get_data_t_span(self, frame_i):
         end_time = frame_i * self.ms_per_frame / 1000
         start_time = end_time - self.trail_length
-        mask = np.where((start_time < self.t) & (self.t < end_time))
-        return self.t[mask], self.y[mask]
+        return start_time, end_time
+
+    @staticmethod
+    def get_data_mask(start_time, end_time, t):
+        return np.where((start_time < t) & (t < end_time))
