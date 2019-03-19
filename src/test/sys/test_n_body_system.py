@@ -3,7 +3,7 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 from echonn.sys import NBodySystem, SystemSolver
-from scipy.constants import G
+from scipy.constants import G, pi
 from .sys_util import clearFigs
 
 
@@ -114,4 +114,31 @@ class TestModel(unittest.TestCase):
         run = solver.run(tspan, y0)
         clearFigs()
         solver.plotnd(run)
+        # plt.show(True)
+
+    def testOrbit(self):
+        Ms = 1.98847 * 10**30  # kg
+        # M_earth = 5.9722 * 10**24  # kg
+        Mj = 1.899 * 10**27  # kg
+        Rj = 778.3 * 10**9  # m
+        Tj = 3.743 * 10**8  # s
+        # V_earth = 30 * 10**3  # m/s
+        # r = 149.6 * 10**9  # m
+
+        vel = 2 * pi * Rj / Tj
+
+        sun_x = np.zeros(3)
+        sun_v = np.zeros(3)
+        jup_x = np.zeros(3)
+        jup_v = np.zeros(3)
+
+        jup_x[0] = Rj
+        jup_v[1] = vel
+        m = [Ms, Mj]
+        v = np.concatenate((sun_x, jup_x, sun_v, jup_v)).reshape(-1)
+
+        sys = NBodySystem(m)
+        solver = SystemSolver(sys)
+        res = solver.run([0, Tj*1.5], v)
+        solver.plotnd(res)
         # plt.show(True)

@@ -89,9 +89,13 @@ class NBodySystem(DynamicalSystem):
             plt.figure(fig.number)
 
     def render_time_frame(self, t, y, fig, time=1):
-        pass
+        plt.figure(fig.number)
+        plt.clf()
+        mask = np.where((time - 1 <= t) & (t <= time))
+        to_plot = y[mask]
 
     def render_fade_trail(self, run, fig=None, base_size=10):
+
         # select dim
         res = run['results']
         sys = run['system']
