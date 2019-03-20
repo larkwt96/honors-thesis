@@ -60,8 +60,9 @@ class DoublePendulumAnimator(Animator):
         if t.shape[0] == 0:
             t_norm = np.ones_like(t)
         else:
+            t_shift = t - t[0]
             t_norm = np.divide(
-                t - t[0], t[-1], out=np.ones_like(t), where=(t != 0))
+                t_shift, t_shift[-1], out=np.ones_like(t), where=(t != 0))
         inner_pos = inner_pos[:, mask].reshape(2, -1)
         outer_pos = outer_pos[:, mask].reshape(2, -1)
 

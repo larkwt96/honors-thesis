@@ -4,6 +4,7 @@ import unittest
 from contextlib import contextmanager
 from echonn.sys.double_pendulum_animator import DoublePendulumAnimator
 from echonn.sys import DoublePendulumSystem, SystemSolver
+from scipy.constants import pi
 
 
 class TestDoubPenAnim(unittest.TestCase):
@@ -18,10 +19,10 @@ class TestDoubPenAnim(unittest.TestCase):
 
     def testLongRun(self):
         tf = 50
-        run1 = self.pendulum_solver.run([0, tf], [.2, 1, 1, 0])
-        run2 = self.pendulum_solver.run([0, tf], [.2, 1.1, 1, 0])
+        run1 = self.pendulum_solver.run([0, tf], [pi, 1, 1, 0])
+        run2 = self.pendulum_solver.run([0, tf], [pi, 1.001, 1, 0])
         if self.render_long:
-            self.runRender([run1, run2], 'long_run', mult=tf/10)
+            self.runRender([run1, run2], 'long_run', mult=.75)
 
     def testRender(self):
         run1 = self.pendulum_solver.run([0, self.render_til], [.2, 1, 1, 0])
