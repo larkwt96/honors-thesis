@@ -5,14 +5,16 @@ from .time_series_forecaster import TimeSeriesForecaster
 
 
 class EchoStateNetwork(TimeSeriesForecaster):
-    def __init__(self, K, N, L, T0=50, alpha=.8, use_noise=False, f=None, g=None, g_inv=None):
+    def __init__(self, K, N, L, T0=50, alpha=.8, noise=0.0, f=None, g=None, g_inv=None):
         """
         K - input units, u
         N - internal units, x
         L - output units, y
         T0 - how long does it take for transient dynamics to wash out (10 for
         small, fast nets to 500 for large, slow nets). T is the sampling range, set by the train call.
-        use_noise - should the algorithm feed noise into the model during sampling (0-T).
+        noise - Defaults to 0, good from 0.01 to 0.0001. Smaller is better. None defaults to 0.0001.
+        Specifies whether the algorithm should feed noise into the model
+        during sampling. Uniform distribution ranging from [-noise, noise].
         """
         self.shapes = [
             (N, K),
@@ -25,7 +27,7 @@ class EchoStateNetwork(TimeSeriesForecaster):
         self.L = L
         self.T0 = T0  # at T0, x[T0] has stabilized
         self.alpha = alpha
-        self.use_noise = use_noise  # TODO add noise to sampling
+        self.noise = 0.0001 if noise is None else noise
         self.w = None
         self.Ws = None
         self.Win = None
@@ -76,7 +78,8 @@ class EchoStateNetwork(TimeSeriesForecaster):
         x = self.x
         y = self.y
 
-        return f(Win @ u[n] + W @ x[n-1] + Wback @ y[n-1])
+        noise = np.random.uniform(-self.noise, self.noise)
+        return f(Win @ u[n] + W @ x[n-1] + Wback @ y[n-1] + noise)
 
     def calc_y(self, n):
         """

@@ -139,9 +139,9 @@ class TestEchoStateNetwork(unittest.TestCase):
         y = y.reshape(-1)
         return np.mean((x - y)**2)
 
-    def runPaperExperiment(self):
+    def runPaperExperiment(self, noise=0):
         esn = EchoStateNetwork(0, 20, 1, T0=100, g=np.tanh,
-                               g_inv=np.arctanh, alpha=.99)
+                               g_inv=np.arctanh, alpha=.99, noise=noise)
         n = np.arange(1, 351)
         ds = np.sin(n/4)/2
         esn.fit(ds[:300])
@@ -183,4 +183,12 @@ class TestEchoStateNetwork(unittest.TestCase):
 
     # test noise works
     def testNoiseWorks(self):
-        pass  # TODO
+        for _ in range(10):
+            mse_train, mse_test = self.runPaperExperiment(noise=None)
+            #print(mse_train, mse_test)
+            if np.isclose(mse_train, 0, atol=10**-8) and np.isclose(mse_test, 0, atol=10**-8):
+                return
+        raise Exception('noise paper experiment failed')
+
+    def testBiasWorks(self):
+        pass  # TODO enable bias in esn
