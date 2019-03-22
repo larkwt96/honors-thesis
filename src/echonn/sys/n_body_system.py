@@ -1,12 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.constants import G
+from scipy.constants import G as gravity_acc
 
 from .system import DynamicalSystem
 
 
 class NBodySystem(DynamicalSystem):
-    def __init__(self, body_masses=[1, 1.1, 1.2], body_dim=3):
+    def __init__(self, body_masses=[1, 1.1, 1.2], body_dim=3, G=gravity_acc):
         """
         Warning: changing the body_dim from 3 will work, but the physics
         probably isn't right since it will use the squared distance instead
@@ -22,6 +22,7 @@ class NBodySystem(DynamicalSystem):
         self._body_dim = body_dim
         # The mass of each bodies
         self._body_masses = body_masses
+        self.G = G
 
     @property
     def body_dim(self):
@@ -32,6 +33,8 @@ class NBodySystem(DynamicalSystem):
         return self._body_masses
 
     def unpack(self, v):
+        if v.dtype != np.float64:
+            v = v.astype(np.float64)
         half = self.dim // 2
         r = v[:half].reshape(self.body_count, self.body_dim)
         p = v[half:].reshape(self.body_count, self.body_dim)
@@ -53,6 +56,7 @@ class NBodySystem(DynamicalSystem):
         # p' = -G diag(m) sum j!=i of m_j (r_i - r_j) / |r_i - r_j|^3
 
         #  where r_i is the ith row of the R matrix
+        G = self.G
         r, p = self.unpack(v)
         m = self.body_masses
 
@@ -89,13 +93,9 @@ class NBodySystem(DynamicalSystem):
             plt.figure(fig.number)
 
     def render_time_frame(self, t, y, fig, time=1):
-        plt.figure(fig.number)
-        plt.clf()
-        mask = np.where((time - 1 <= t) & (t <= time))
-        to_plot = y[mask]
+        pass
 
     def render_fade_trail(self, run, fig=None, base_size=10):
-
         # select dim
         res = run['results']
         sys = run['system']
