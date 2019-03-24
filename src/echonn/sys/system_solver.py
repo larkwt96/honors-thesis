@@ -1,9 +1,9 @@
 import math
-
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.integrate import solve_ivp
+from .lyapunov_system import LyapunovSystem
 
 
 class SystemSolver:
@@ -28,6 +28,51 @@ class SystemSolver:
         }
         self._runs.append(run)
         return run
+
+    def build_lce_y0(self, y0, T, kwargs):
+        if y0 is None:
+            y0_use = np.random.rand(self.system.dim)
+            run = self.run([0, T/2], y0_use, **kwargs)
+            # tend it towards the attractor
+            y0_use = run['results'].y[:, -1]
+        else:
+            y0_use = y0
+        return y0_use
+
+    def get_lce(self, T=1000, y0=None, dT=None, **kwargs):
+        """
+        y0 - will be set randomly and then run through the system for a
+        little
+        T - should be set manually to a reasonable value.
+        dT - should be fine as default, but can be set manually to something
+        larger or smaller.
+        kwargs - are passed to the run parameters of SystemSolver
+        """
+        if not 'max_step' in kwargs and dT is not None:
+            kwargs['max_step'] = dT
+        # create the lyapunov system
+        lce_system = LyapunovSystem(self.system)
+        # create a solver for the system
+        lce_solver = SystemSolver(lce_system)
+        # create an initial condition (or use given)
+        y0_use = self.build_lce_y0(y0, T, kwargs)
+        # create initial conditino for lyapunov solver
+        v0 = lce_system.build_y0(y0_use)
+        # run lyapunov system
+        run = lce_solver.run([0, T], v0, **kwargs)
+        # if failed, raise exception
+        if run['results'].status != 0:
+            raise Exception(run['results'].message)
+        # calculate the jacobian of trajectory with respect to initial condition
+        sys_dim = self.system.dim
+        y = run['results'].y
+        yf = y[:sys_dim, -1]
+        Df_y0 = y[sys_dim:, -1].reshape(sys_dim, sys_dim)
+        # calculate singular value decomposition
+        _, svds, *_ = np.linalg.svd(Df_y0)
+        # calculate lyapunov exponent
+        lce = np.log(svds[0])/T
+        return lce, yf, Df_y0
 
     def get_last_run(self, run=None):
         if run is None:
