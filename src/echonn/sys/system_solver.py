@@ -49,15 +49,63 @@ class SystemSolver:
         lce = np.log(svds[0])/T
         return lce
 
-    def get_lce(self, T=1000, y0=None, **kwargs):
+    def quick_lce(self, T=1000, y0=None, partition=None, **kwargs):
         """
         y0 - will be set randomly and then run through the system for a
         little
         T - should be set manually to a reasonable value.
-        dT - should be fine as default, but can be set manually to something
-        larger or smaller.
+        partition - compute to T in partitions to save memory (for faster
+        computation) (defaults to T)
         kwargs - are passed to the run parameters of SystemSolver
         """
+        if partition is None:
+            partition = T
+        sys_dim = self.system.dim
+        # create the lyapunov system
+        lce_system = LyapunovSystem(self.system)
+        # create a solver for the system
+        lce_solver = SystemSolver(lce_system)
+        # create an initial condition (or use given)
+        y0_use = self.build_lce_y0(y0, T, kwargs)
+        # create initial conditino for lyapunov solver
+        v0 = lce_system.build_y0(y0_use)
+
+        tspan = np.arange(0, T, T/partition)
+        v = v0
+        lces = []
+        for i in range(1, tspan.shape[0]):
+            # run lyapunov system
+            run = lce_solver.run(tspan[i-1:i+1], v, **kwargs)
+            # if failed, raise exception
+            if run['results'].status != 0:
+                raise Exception(run['results'].message)
+            v = run['results'].y[:, -1]
+            Df_y0 = v[sys_dim:].reshape(sys_dim, sys_dim)
+            lce = self.calc_lce(Df_y0, tspan[i])
+            lces.append(lce)
+            print(tspan[i], lce)
+        # run lyapunov system
+        run = lce_solver.run([tspan[-1], T], v, **kwargs)
+        # if failed, raise exception
+        if run['results'].status != 0:
+            raise Exception(run['results'].message)
+        vf = run['results'].y[:, -1]
+        Df_y0 = v[sys_dim:].reshape(sys_dim, sys_dim)
+        lce = self.calc_lce(Df_y0, T)
+        print(float(T), lce)
+        lces.append(lce)
+        tspan[:-1] = tspan[1:]
+        tspan[-1] = T
+        return tspan, lces
+
+    def get_lce(self, T=1000, y0=None, **kwargs):
+        """
+        T - should be set manually to a reasonable value.
+        y0 - will be set randomly and then run through the system for a
+        little
+        kwargs - are passed to the run parameters of SystemSolver
+        """
+        sys_dim = self.system.dim
         # create the lyapunov system
         lce_system = LyapunovSystem(self.system)
         # create a solver for the system
@@ -72,9 +120,7 @@ class SystemSolver:
         if run['results'].status != 0:
             raise Exception(run['results'].message)
         # calculate the jacobian of trajectory with respect to initial condition
-        sys_dim = self.system.dim
         y = run['results'].y
-        yf = y[:sys_dim, -1]
         Df_y0 = y[sys_dim:, -1].reshape(sys_dim, sys_dim)
         lce = self.calc_lce(Df_y0, T)
         return lce, run

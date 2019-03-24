@@ -104,8 +104,36 @@ class TestModel(unittest.TestCase):
         self.assertTrue(np.all(np.isclose(vp, vpsys, atol=self.atol)))
 
     @unittest.skip
-    def testFig8Lce(self):  # takes a long time, so its disabled
-        # using IC from TODO
+    def testRandomInit(self):
+        sys = NBodySystem(body_masses=[1, 1, 1], G=1)
+        solver = SystemSolver(sys)
+        tspan = [0, 100]
+        expand = 10
+        y0 = np.random.rand(2*sys.body_dim*len(sys.body_masses))*expand
+        y0[9:] /= expand/2
+
+        total_mass = np.sum(sys.body_masses)
+        vcm = np.zeros(3)
+        for m, v in zip(sys.body_masses, y0[9:].reshape(3, -1)):
+            vcm += m*v
+        vcm /= total_mass
+        yps = y0[9:].reshape(3, -1)
+        yps -= vcm[None, :]
+        run = solver.run(tspan, y0)
+        clearFigs()
+        solver.plotnd(run)
+        # print(run['results'].y[:, -1].reshape(6, -1))
+        y_act = run['results'].y[:9]
+        run['results'].y = y_act[:3]
+        fig = solver.plot3d(run)
+        run['results'].y = y_act[3:6]
+        fig = solver.plot3d(run, fig=fig)
+        run['results'].y = y_act[6:9]
+        fig = solver.plot3d(run, fig=fig)
+        plt.show(True)
+
+    # @unittest.skip
+    def testFig8LcePartition(self):  # takes a long time, so its disabled
         sys = NBodySystem(body_masses=[1, 1, 1], G=1)
         solver = SystemSolver(sys)
         tspan = [0, 10]
@@ -121,15 +149,40 @@ class TestModel(unittest.TestCase):
         y0[12:15] = -x3p / 2
         y0[15:18] = x3p
         # print(sys.fun(np.zeros_like(y0), y0).reshape(6, -1))
+        tspan, lces = solver.quick_lce(tspan[1], y0, partition=None)
+        print(np.mean(lces[-5:]))
+        clearFigs()
+        plt.figure()
+        plt.plot(tspan, lces)
+        plt.show(True)
+
+    @unittest.skip
+    def testFig8Lce(self):  # takes a long time, so its disabled
+        sys = NBodySystem(body_masses=[1, 1, 1], G=1)
+        solver = SystemSolver(sys)
+        tspan = [0, 1.5]
+        y0 = np.zeros(2*sys.body_dim*len(sys.body_masses), dtype=np.float64)
+
+        x1 = np.array([0.97000436, -0.24308753, 0])
+        x3p = np.array([-0.93240737, -0.86473146, 0])
+
+        y0[0:3] = x1
+        y0[3:6] = -x1
+        y0[6:9] = 0
+        y0[9:12] = -x3p / 2
+        y0[12:15] = -x3p / 2
+        y0[15:18] = x3p
+        # print(sys.fun(np.zeros_like(y0), y0).reshape(6, -1))
         lce, run = solver.get_lce(tspan[1], y0)
-        T0 = 0
-        t = run['results'].t[T0:]
-        y = run['results'].y[sys.dim:, T0:].reshape(sys.dim, sys.dim, -1)
-        print(solver.calc_lce(y[:, :, -1], t[-1]))
-        print(y[:, :, -1])
+        t = run['results'].t[1:]
+        y = run['results'].y[sys.dim:, 1:].reshape(sys.dim, sys.dim, -1)
+        #print(y[:, :, -1])
         lces = []
         for i, t_val in enumerate(t):
-            lces.append(solver.calc_lce(y[:, :, i], t_val))
+            Df_y = y[:, :, i]
+            lces.append(solver.calc_lce(Df_y, t_val))
+        print(lces[-1])
+        print(np.mean(lces[-5:]))
         clearFigs()
         plt.figure()
         plt.plot(t, lces)
