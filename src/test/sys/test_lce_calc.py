@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 from echonn.sys import LorenzSystem, DoublePendulumSystem, SystemSolver
+import matplotlib.pyplot as plt
 
 
 class TestLCECalc(unittest.TestCase):
@@ -13,7 +14,17 @@ class TestLCECalc(unittest.TestCase):
         slv.get_lce(T=2)
         # uncomment to validate
         if self.validation_test:
-            lce, yf, Df_y0 = slv.get_lce(T=100)
+            lce, run = slv.get_lce(T=100)
+            T0 = 0
+            t = run['results'].t[T0:]
+            y = run['results'].y[:, T0:]
+            lces = []
+            for i, t_val in enumerate(t):
+                Df_y0 = y[sys.dim:, i].reshape(sys.dim, sys.dim)
+                lces.append(slv.calc_lce(Df_y0, t_val))
+            plt.figure()
+            plt.plot(t, lces)
+            plt.show(True)
             print(Df_y0)
             print(lce, l1, (lce - l1)/l1)
             self.assertAlmostEqual((lce - l1)/l1, 0, places=0)
@@ -32,7 +43,9 @@ class TestLCECalc(unittest.TestCase):
         slv = SystemSolver(sys)
         slv.get_lce(T=2, y0=[1.8, 1.8, 0, 0])
         if self.validation_test:
-            lce, yf, Df_y0 = slv.get_lce(T=100, y0=[1.8, 1.8, 0, 0])
+            lce, run = slv.get_lce(T=100, y0=[1.8, 1.8, 0, 0])
+            y = run['results'].y
+            Df_y0 = y[sys.dim:, -1].reshape(sys.dim, sys.dim)
             print(Df_y0)
             print(lce)
             self.assertGreater(lce, 0)

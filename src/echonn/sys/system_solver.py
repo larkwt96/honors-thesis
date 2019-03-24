@@ -39,7 +39,17 @@ class SystemSolver:
             y0_use = y0
         return y0_use
 
-    def get_lce(self, T=1000, y0=None, dT=None, **kwargs):
+    def calc_lce(self, Df_y0, T):
+        # calculate singular value decomposition
+        _, svds, *_ = np.linalg.svd(Df_y0)
+        svd = svds[0]
+        if svd <= 0:
+            return -np.inf
+        # calculate lyapunov exponent
+        lce = np.log(svds[0])/T
+        return lce
+
+    def get_lce(self, T=1000, y0=None, **kwargs):
         """
         y0 - will be set randomly and then run through the system for a
         little
@@ -48,8 +58,6 @@ class SystemSolver:
         larger or smaller.
         kwargs - are passed to the run parameters of SystemSolver
         """
-        if not 'max_step' in kwargs and dT is not None:
-            kwargs['max_step'] = dT
         # create the lyapunov system
         lce_system = LyapunovSystem(self.system)
         # create a solver for the system
@@ -68,11 +76,8 @@ class SystemSolver:
         y = run['results'].y
         yf = y[:sys_dim, -1]
         Df_y0 = y[sys_dim:, -1].reshape(sys_dim, sys_dim)
-        # calculate singular value decomposition
-        _, svds, *_ = np.linalg.svd(Df_y0)
-        # calculate lyapunov exponent
-        lce = np.log(svds[0])/T
-        return lce, yf, Df_y0
+        lce = self.calc_lce(Df_y0, T)
+        return lce, run
 
     def get_last_run(self, run=None):
         if run is None:
