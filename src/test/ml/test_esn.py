@@ -185,8 +185,9 @@ class TestEchoStateNetwork(unittest.TestCase):
     def testNoiseWorks(self):
         for _ in range(10):
             mse_train, mse_test = self.runPaperExperiment(noise=None)
+            atol = 10**-5
             #print(mse_train, mse_test)
-            if np.isclose(mse_train, 0, atol=10**-8) and np.isclose(mse_test, 0, atol=10**-8):
+            if np.isclose(mse_train, 0, atol=atol) and np.isclose(mse_test, 0, atol=atol):
                 return
         raise Exception('noise paper experiment failed')
 
