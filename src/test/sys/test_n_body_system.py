@@ -132,7 +132,7 @@ class TestModel(unittest.TestCase):
         fig = solver.plot3d(run, fig=fig)
         plt.show(True)
 
-    # @unittest.skip
+    @unittest.skip
     def testFig8LcePartition(self):  # takes a long time, so its disabled
         sys = NBodySystem(body_masses=[1, 1, 1], G=1)
         solver = SystemSolver(sys)
