@@ -12,6 +12,18 @@ class SystemSolver:
         self._runs = []
 
     def run(self, t_span, y0, *args, **kwargs):
+        """
+        returns a dictionary with results.
+        {
+            'results': the results from solve_ivp
+            'index': the index of the run in the solver's past runs
+            'system': the system object used
+            't_span': the time interval used in solve_ivp
+            'y0': initial condition
+            'args': args passed to solve_ivp
+            'kwargs': kwargs passed to solve_ivp
+        }
+        """
         method_given = len(args) > 0 or 'method' in kwargs
         system_has_method = self.system.method is not None
         if not method_given and system_has_method:
