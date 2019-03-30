@@ -10,7 +10,7 @@
 \usepackage{amsfonts}       % blackboard math symbols
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
-\usepackage{lipsum}
+%\usepackage{lipsum}
 
 \title{Time Series Analysis of Chaotic Dynamical Systems with Recurrent Neural Networks}
 
@@ -42,52 +42,104 @@
 \maketitle
 
 \begin{abstract}
+This is a paper about chaos.
 \end{abstract}
 
 %%% INTRODUCTION %%%
 \section{Introduction}
-\lipsum
+
+This is a paper about chaos.
 
 %%% CHAOS %%%
 \section{Chaos}
-\lipsum
+
+In 1963, Edward N. Lorenz published an article researching a simplified system of 
+ordinary differential equations modeling a convective system \cite{lorenz1963deterministic}. His 
+research popularized the possibility of a system being highly sensitive to 
+initial conditions, i.e., chaos theory; while he wasn't the first to discover 
+this phenomenon, he is considered to be the "official discoverer of chaos 
+theory" \cite{oestreicher2007history}.
+
+When forecasting, the goal is to have accurate predictions. However, 
+a chaotic system's sensitivity to initial conditions implies that a small 
+perturbation as a result of error will produce incorrect solutions.
+Further, given a periodic
+solution, we hope that a small perturbation, from error in measurement or from 
+floating-point errors in numerical calculations, doesn't affect the solution or 
+at least produces a quasi-periodic solution close to the periodic one. 
+(A solution or trajectory $F$ 
+is quasi-periodic if and only if for all $t$ and for some $\tau$, $F(t+\tau)$ 
+is arbitrarily close to $F(t)$ \cite{lorenz1963deterministic}.)
+
+An example of this is the trajectories of the sun and planets in our solar 
+system. Newton's equations can be used to create a system of equations to model 
+the bodies of mass (known as the n-body problem). However, with the existence of
+other bodies of mass from other solar systems within the universe, we will have 
+small perturbations introduced into the system. If the system is chaotic, then 
+over time, the actual trajectories will diverge from our model's 
+\cite{oestreicher2007history}. The amount of time for the trajectories to differ
+by a factor of 10 is known as the Lyapunov constant 
+\cite{oestreicher2007history}. 
+
+In terms of forecasting, the Lyapunov time constant can be
+used to know how much time
+will pass before it's very likely that the model has become incorrect since
+errors introduced to the calculated solution will have diverged too far from
+the actual solution. 
+Researchers have used it to evaluate the effectiveness of forecasting models on
+chaotic problems \cite{pathak2018model}. Predicting the solution of
+a chaotic model over an interval of time of can be easy if that interval is well
+below the Lyapunov constant.
+
+One of the defining characteristics of chaos is that the error from 
+perturbations grows exponentially \cite{oestreicher2007history}. At the time of 
+Lorenz' paper, unstable 
+error was not well understood, and this led to Lorenz' surprising discovery 
+\cite{oestreicher2007history}. Lorenz reported that a single iteration in 
+calculating the solution to the dynamical system took 
+approximately one second \cite{lorenz1963deterministic}. In his paper, he shows 
+one of his calculations having about 3000 iterations, which must have taken 
+around 50 minutes. Given the amount of time it takes to perform the calculation,
+it's tempting to continue the calculation from the output of the previous 
+calculation. However, the story of the discover is that while the computer used 
+6 digit accuracy, it output only 3 digits, so when the simulation was continued 
+by Lorenz with the less accurate measurements, he found the results to be very 
+different \cite{oestreicher2007history}. 
+
+Chaos can appear in many different situations. Lorenz's paper demonstrates chaos
+in a dynamical system useful for forecasting convection in the atmosphere or 
+liquids \cite{lorenz1963deterministic}. "Chaos theory has a few applications for
+modeling endogenous biological rhythms such as heart rate, brain functioning, 
+and biological docks" \cite{oestreicher2007history}. It can also appear in 
+solutions to Hamiltonian problems such as the 3 body problem (as mentioned 
+before) and the double pendulum problem (as I will show later). Understanding
+the predictability of chaos is very useful to many different fields.
+
+\subsection{Lyapunov Constant}
 
 %%% DYNAMICAL SYSTEMS %%%
 \section{Dynamical Systems}
-\lipsum
 
 \subsection{Lorenz System}
-\lipsum
 \subsection{Double Pendulum}
-\lipsum
 \subsection{3-Body Problem}
-\lipsum
 
 %%% MODELS %%%
 \section{Models}
-\lipsum
 
 \subsection{ARIMA}
-\lipsum
 \subsection{Recurrent Neural Networks}
-\lipsum
 \subsection{Echo State Networks}
-\lipsum
 \subsection{LTSM}
-\lipsum
 
 %%% ANALYSIS %%%
 \section{Analysis}
-\lipsum
 
 \subsection{Method}
-\lipsum
 \subsection{Results}
-\lipsum
 
 %% CONCLUSION %%%
 \section{Conclusion}
-\lipsum
 
 \bibliography{references}
 \bibliographystyle{unsrt}
