@@ -17,6 +17,15 @@ class TestDoubPenAnim(unittest.TestCase):
         self.render_long = False  # slows test a lot
         self.render = False  # slows test
 
+    def testWeirdLenSys(self):
+        sys = DoublePendulumSystem(1, 2, .5, 1.5)
+        slv = SystemSolver(sys)
+        tf = 3
+        run1 = slv.run([0, tf], [pi, 1, 1, 0])
+        run2 = slv.run([0, tf], [pi, 1.001, 1, 0])
+        if self.render:
+            self.runRender([run1, run2], 'odd_pend')
+
     def testLongRun(self):
         tf = 50
         run1 = self.pendulum_solver.run([0, tf], [pi, 1, 1, 0])

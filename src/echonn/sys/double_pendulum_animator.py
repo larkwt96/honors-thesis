@@ -18,7 +18,8 @@ class DoublePendulumAnimator(Animator):
         self.runs = runs
         limit_size = -1
         for run in runs:
-            limit_size = max(limit_size, 2*run['system'].l+limit_margin)
+            l = run['system'].l1 + run['system'].l2
+            limit_size = max(limit_size, l+limit_margin)
         self.limits = [-limit_size, limit_size, -limit_size, limit_size]
         self.speed = speed
 
@@ -38,11 +39,13 @@ class DoublePendulumAnimator(Animator):
 
     def get_endpoints(self, run):
         inner_theta, outer_theta, _, _ = run['results'].y
+        l1 = run['system'].l1
+        l2 = run['system'].l2
         inner_theta = inner_theta - pi/2
         outer_theta = outer_theta - pi/2
-        inner_pos = np.array([np.cos(inner_theta), np.sin(inner_theta)])
-        outer_relative_pos = np.array([np.cos(outer_theta),
-                                       np.sin(outer_theta)])
+        inner_pos = l1*np.array([np.cos(inner_theta), np.sin(inner_theta)])
+        outer_relative_pos = l2*np.array([np.cos(outer_theta),
+                                          np.sin(outer_theta)])
         outer_pos = inner_pos + outer_relative_pos
         return inner_pos, outer_pos
 
