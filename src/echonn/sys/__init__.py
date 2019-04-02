@@ -6,3 +6,4 @@ from .double_pendulum_system import DoublePendulumSystem
 from .n_body_system import NBodySystem
 from .animator import Animator
 from .lyapunov_system import LyapunovSystem
+from .restricted_circular_3_body import RestrictedCircular3Body

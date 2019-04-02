@@ -100,7 +100,7 @@ class SystemSolver:
         run = lce_solver.run([tspan[-1], T], v, **kwargs)
         # if failed, raise exception
         if run['results'].status != 0:
-            raise Exception(run['results'].message)
+            print('Warning:', run['results'].message)
         vf = run['results'].y[:, -1]
         Df_y0 = v[sys_dim:].reshape(sys_dim, sys_dim)
         lce = self.calc_lce(Df_y0, T)

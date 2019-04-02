@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from echonn.sys import LorenzSystem, DoublePendulumSystem, SystemSolver
+from echonn.sys import LorenzSystem, DoublePendulumSystem, SystemSolver, CircleSystem
 import matplotlib.pyplot as plt
 from scipy.constants import pi
 from .sys_util import clearFigs
@@ -51,6 +51,12 @@ class TestLCECalc(unittest.TestCase):
         sys = DoublePendulumSystem()
         slv = SystemSolver(sys)
         slv.get_lce(T=2, y0=[1.8, 1.8, 0, 0])
+
+    def testCircleLCE(self):
+        sys = SystemSolver(CircleSystem())
+        lce, run = sys.get_lce()
+        self.assertAlmostEqual(lce, 0, places=4)
+        # print(lce)
 
     @unittest.skip
     def testLCEPendulumLong(self):
