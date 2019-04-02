@@ -14,6 +14,7 @@
 \usepackage{caption}
 \usepackage{float}
 \usepackage{graphicx}
+\usepackage{subcaption}
 
 % the comment 'DATA POINT' will mark where data was calculated and then inserted into
 % the paper.
@@ -59,7 +60,7 @@ When forecasting, the goal is to have accurate predictions. However,
 a chaotic system's sensitivity to initial conditions implies that a small 
 perturbation as a result of error will produce incorrect solutions.
 Further, given a periodic
-solution, we hope that a small perturbation, from error in measurement or from 
+solution, the hope is that a small perturbation, from error in measurement or from 
 floating-point errors in numerical calculations, doesn't affect the solution or 
 at least produces a quasi-periodic solution close to the periodic one. 
 (A solution or trajectory $F$ 
@@ -69,8 +70,8 @@ is arbitrarily close to $F(t)$ \cite{lorenz1963deterministic}.)
 An example of this is the trajectories of the sun and planets in our solar 
 system. Newton's equations can be used to create a system of equations to model 
 the bodies of mass (known as the n-body problem). However, with the existence of
-other bodies of mass from other solar systems within the universe, we will have 
-small perturbations introduced into the system. If the system is chaotic, then 
+other bodies of mass from other solar systems within the universe, 
+small perturbations are introduced into the system. If the system is chaotic, then 
 over time, the actual trajectories will diverge from our model's 
 \cite{oestreicher2007history}. 
 
@@ -101,7 +102,7 @@ the predictability of chaos is very useful to many different fields.
 \subsection{Lyapunov Constant}
 
 In terms of forecasting, it's useful to know how chaotic a dynamical system is. 
-To measure this, we will measure the rate at which nearby trajectories 
+Chaos will be measured by the exponential rate at which nearby trajectories 
 diverge. Constants describing the divergence are known as the Lyapunov 
 Characteristic Exponents (LCEs) \cite{sandri1996numerical}. There is an LCE for 
 each dimension, and since they all represent exponential growth. The error 
@@ -136,9 +137,12 @@ To find this, we will use a method detailed in \cite{viswanath1998lyapunov}.
 Three dynamical systems will be used to demonstrate the predictability of 
 chaotic systems: the Lorenz system, Poincaré's 3-body 
 problem solution, and the double pendulum system.
-The Poincaré system is the one of the first (possibly the first), and Lorenz
-is a classical example. The double pendulum is commonly referred to as chaotic, 
-and I will show this later.
+The Poincaré system is the one of the first, and the Lorenz system
+is a classic example. The double pendulum is commonly referred to as chaotic, 
+and I will show this later. Both Poincaré's restricted 3 body problem solution
+and 
+the double pendulum are Hamiltonian systems representing physical systems
+within our universe.
 
 % TODO: numerical solutions section
 
@@ -310,48 +314,43 @@ shown here.
 
 There are however two issues when integrating this problem. As objects approach each
 other, the distance between them 
-approaches zero. If we have a collision, then this approaches infinity. There is no 
-collision detection in this model as we assume falsely that each body has a radius of zero,
-so this case is not handled. Instead, we will get a 
-divide by zero error, and the model cannot be calculated further. Further, near collisions 
-are also an issue. Detailed in \cite{chambers1999hybrid}, with the distance between bodies 
-approaching zero, their potential energy becomes significantly smaller than other values, 
-such as those describing kinetic energy. This 
-produces a stiff system of equations, and introduces error. Since energy is conserved in
-this system (as it is a Hamiltonian system), the error introduced represents energy being 
-created. This causes the singularity property seen in Figure \ref{fig:singularity}
+approaches zero. If collision occurs, then this approaches infinity. There is no 
+collision detection in this model, and each body has a radius of zero,
+so this case is not handled. Instead, a divide by zero error occurs,
+and the model cannot be calculated further.
 
-\begin{figure}[h]
+Further, near collisions 
+are also an issue. With the distance between bodies 
+approaching zero, their potential energy becomes significantly smaller than other values, 
+such as those describing kinetic energy \cite{chambers1999hybrid}. This 
+produces a stiff system of equations, and introduces error. Since energy is conserved in
+this Hamiltonian system, the error introduced represents energy being 
+created. This can cause the singularity property seen in Figure \ref{fig:singularity}.
+This problem can be solved by using a symplectic integrator \cite{chambers1999hybrid}. 
+
+\begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.4\textwidth}
+    \begin{subfigure}[b]{0.3\textwidth}
         \includegraphics[width=\textwidth]{images/r3b_collision.png}
         \caption{The restricted 3 body problem with collision}
         \label{fig:r3b_collision}
     \end{subfigure}
     ~
-    \begin{subfigure}[b]{0.4\textwidth}
+    \begin{subfigure}[b]{0.3\textwidth}
         \includegraphics[width=\textwidth]{images/r3b_collision_whole.png}
         \caption{The resultant divergence of the body}
         \label{fig:r3b_collision_whole}
     \end{subfigure}
-    \caption{The Double Pendulum}
-    \label{fig:doub_pend}
+    \caption{The Restricted 3 Body Problem Error from Collision}
+    \label{fig:singularity}
 \end{figure}
 
-
-
-
-While it is possible to solve this issue with symplectic integrators \cite{chambers1999hybrid}, 
+While it is possible to use a symplectic integrator, it is not necessary. Under the right 
+initial conditions, the third body will diverge regardless. The simple divergent spiral
+isn't chaotic, so instead orbital and collision less initial conditions will be used.
+Without divergence and without collisions, the symplectic integrator is unnecessary.
 
 \subsection{Double Pendulum}
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=.5\linewidth]{images/example_doub_pend.png}
-    \caption{The Double Pendulum}
-    \label{fig:doub_pend}
-\end{figure}
-
 
 The double pendulum is commonly cited to be chaotic 
 \cite{stachowiak2006numerical} \cite{levien1993double}. Using the system 
@@ -405,6 +404,13 @@ the center pivot at the origin, $(0, 0)$, can be calculated as follows:
     x_2 &= x_1 + l_2 \sin(\theta_2), \nonumber \\
     y_2 &= y_1 - l_2 \cos(\theta_2), \label{eq:doub_pend_endpoints}
 \end{align}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.5\linewidth]{images/example_doub_pend.png}
+    \caption{The Double Pendulum}
+    \label{fig:doub_pend}
+\end{figure}
 
 % TODO: position of the pendulum end points
 
