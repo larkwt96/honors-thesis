@@ -11,7 +11,6 @@ class TestModel(unittest.TestCase):
     def setUp(self):
         # test data
         self.circle_solver = SystemSolver(CircleSystem())
-        self.lorenz_solver = SystemSolver(LorenzSystem())
 
     def testSomething(self):
         res = self.circle_solver.run([0, 7], [0, 1])['results']

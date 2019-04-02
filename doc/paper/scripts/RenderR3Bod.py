@@ -23,4 +23,5 @@ if __name__ == "__main__":
     print('lce:', lce)
     #plt.xlim((-15, 15))
     #plt.ylim((-15, 15))
+    # Saved manually since it can't be scripted
     plt.show(True)

@@ -170,7 +170,7 @@ class SystemSolver:
         plt.tight_layout()
         return fig
 
-    def plotnd(self, run=None, fig=None, figsize=None, legend=False):
+    def plotnd(self, run=None, fig=None, figsize=None, legend=False, dims=None):
         """ warning legend=True is going to mess up the layout. The legend can be seen by the side of the mini graph. """
         run = self.get_last_run(run)
         sys_num = run['index']
@@ -195,7 +195,10 @@ class SystemSolver:
             for _ in range(i+1):
                 plots[i].plot(res.t, y)  # TODO: fix this hack
                 # This makes graphs match color in overlay
-            plots[i].set_ylabel('dim {}'.format(i))
+            if dims is None:
+                plots[i].set_ylabel('dim {}'.format(i))
+            else:
+                plots[i].set_ylabel(dims[i])
             label = 'sys {} dim {}'.format(sys_num, i)
             overlay.plot(res.t, y, label=label)
         if legend:

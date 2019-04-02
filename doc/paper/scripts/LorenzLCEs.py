@@ -10,12 +10,13 @@ if __name__ == "__main__":
     for sigma, rho, beta, lambda_ in data:
 
         lces = []
-        for _ in range(10):
+        print('calculating lces...')
+        for i in range(10):
             sys = LorenzSystem(sigma, rho, beta)
             slv = SystemSolver(sys)
 
             lce, _ = slv.get_lce(T=150)
-            print('lce:', lce)
+            print('\t{}:'.format(i), lce)
             lces.append(lce)
         res = {}
         res['beta'] = beta
