@@ -13,11 +13,14 @@
 \usepackage{lipsum}
 \usepackage{caption}
 \usepackage{float}
+\usepackage{graphicx}
+
+% the comment 'DATA POINT' will mark where data was calculated and then inserted into
+% the paper.
 
 \newcommand{\der}[2][t]{\frac{\mathrm{d}#2}{\mathrm{d}#1}}
 
 \title{Time Series Analysis of Chaotic Dynamical Systems with Recurrent Neural Networks}
-
 
 \author{
   Lucas Wilson \\
@@ -125,6 +128,7 @@ In order to find the Lyapunov time, we only need to solve for the largest LCE.
 To find this, we will use a method detailed in \cite{viswanath1998lyapunov}.
 
 % TODO: Lyapunov calculation
+% TODO: Test with Circle yielding zero
 
 %%% DYNAMICAL SYSTEMS %%%
 \section{Dynamical Systems}
@@ -136,7 +140,11 @@ The Poincaré system is the one of the first (possibly the first), and Lorenz
 is a classical example. The double pendulum is commonly referred to as chaotic, 
 and I will show this later.
 
+% TODO: numerical solutions section
+
 \subsection{Lorenz System}
+
+% TODO: Image of Lorenz System
 
 The Lorenz system was originally based on a system of equations modeling 
 convection created by Saltzman \cite{lorenz1963deterministic} 
@@ -166,7 +174,7 @@ demonstrate the sufficient accuracy of \texttt{echonn}.
         \hline
         $\sigma$ & $\rho$ & $\beta$ & actual $\lambda$ & calculated $\lambda$ & relative error of calculated $\lambda$ \\
         \hline \hline
-        16 & 45.92 & 4 & 1.50255 & & \\
+        16 & 45.92 & 4 & 1.50255 & & \\ % DATA POINTS
         16 & 40 & 4 & 1.37446 & & \\
         10 & 28 & 8/3 & 0.90566 & & \\
         \hline
@@ -180,7 +188,170 @@ demonstrate the sufficient accuracy of \texttt{echonn}.
 
 \subsection{3-Body Problem}
 
+The 3-body problem, or the generalized n-body problem, is a famous problem which many have 
+analyzed; most notably, Herni Poincaré wrote many papers developing the area significantly
+\cite{chenciner2000remarkable}. One of Poincaré's solutions, known as the circular 
+restricted 3-body problem, demonstrates chaotic properties \cite{oestreicher2007history}. 
+Poincaré performs several reductions of the original 3-body problem in order to come to a 
+much more useful form of the problem. The mass of one of the objects is assumed to be 
+negligible. This is the case for Sun-Earth-Moon orbits. The moon has little effect on the 
+orbit of the sun. Another aspect is the rotating reference frame. Since the mass of one of the bodies is negligible, the problem simplifies to first solving a two body problem. While much easier to solver, Poincaré went further to stop the motion of the two planets by using a rotating reference frame. Rotating with the planets, the problem can be modeled seemingly by two static planets and a third mass-less planet orbiting around those in a two dimensional plane.
+
+% norm from https://tex.stackexchange.com/questions/107186/how-to-write-norm-which-adjusts-its-size
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\rv}{\mathbf{r}}
+The N body problem is defined as follows \cite{chenciner2000remarkable}:
+
+Let $\rv_i$ be the position of the $i^\text{th}$ body in the N body problem.
+Then, the force of gravity is the sum of gravity from every other body in the system.
+That is, 
+
+\begin{equation}
+   F_g^{(i)} = m_i \frac{\mathrm{d}^2 \rv_i}{\mathrm{dt}^2} =
+   \sum_{j \neq i} G \frac{m_i m_j \hat{\rv}_{ij}}{\norm{\rv_{ij}}^3}
+   \label{eq:nbody}
+\end{equation}
+
+where $\rv_{ij} = \rv_j - \rv_i$, $m_i$ is the mass of body $i$, and $G$ is the gravitational constant.
+
+For our purposes, the reduced system is more useful since it is much easier to calculate than numerically solving the original 3-body problem. With three bodies in three dimension, their motion is described by 9 second order differential equations. Therefore, reducing the system to first order differential equations yields 18 first order equations. The reduced problem only requires 4 first order differential equations since the position is defined by two second order differential equations.
+
+Derived in \cite{eberle2007case}, the system of equations defined with dimensionless rotating (synodic) coordinates:
+
+\begin{align}
+    x'' - 2 y' &= x
+        - \frac{\alpha}{r_1^3} (x - \mu)
+        - \frac{\mu}{r_2^3} (x + \alpha) \nonumber \\
+    y'' + 2 x' &= \left(
+        1 - \frac{\alpha}{r_1^3}
+        - \frac{\mu}{r_2^3}
+    \right) y \nonumber \\
+\end{align}
+
+where 
+
+\begin{align}
+    \mu &= \frac{m_1}{m_1 + m_2} \nonumber \\
+    \alpha &= 1 - \mu \nonumber \\
+    r_1(t) &= \left[(x(t) - \mu)^2 + y(t)^2\right]^{\frac{1}{2}} \nonumber \\
+    r_2(t) &= \left[(x(t) + \alpha)^2 + y(t)^2\right]^{\frac{1}{2}} \label{eq:reduc_3body_cor}
+\end{align}
+ 
+and where mass body 1 and two are located at $-\alpha$ and $\mu$.
+
+If we define the following system:
+
+\begin{align}
+    x_1 &= x \nonumber \\
+    x_2 &= x' \nonumber \\
+    y_1 &= y \nonumber \\
+    y_2 &= y', \label{eq:first_order_def}
+\end{align}
+
+then, we can take the derivative of each:
+
+\begin{align*}
+    x_1' &= x' \\
+    &= x_2,
+\end{align*}
+and
+\begin{align*}
+    x_2' &= x'' \\
+    &= 2 y' + x
+        - \frac{\alpha}{r_1^3} (x - \mu)
+        - \frac{\mu}{r_2^3} (x + \alpha) \\
+    &= 2 y_2 + x_1 - \frac{\alpha}{r_1^3} (x_1 - \mu)
+        - \frac{\mu}{r_2^3} (x_1 + \alpha),
+\end{align*}
+and
+\begin{align*}
+    y_1' &= y' \\
+    &= y_2,
+\end{align*}
+and
+\begin{align*}
+    y_2' &= y'' \\
+    &= - 2 x' + \left(
+        1 - \frac{\alpha}{r_1^3}
+        - \frac{\mu}{r_2^3}
+    \right) y \\
+    &= - 2 x_2 + \left(
+        1 - \frac{\alpha}{r_1^3}
+        - \frac{\mu}{r_2^3}
+    \right) y_1.
+\end{align*}
+
+Then, we can represent the second order system of motion as four first order equations:
+
+\begin{align}
+    x_1' &= x_2 \nonumber \\
+    x_2' &= 2 y_2 + x_1 - \frac{\alpha}{r_1^3} (x_1 - \mu)
+        - \frac{\mu}{r_2^3} (x_1 + \alpha) \nonumber \\
+    y_1' &= y_2 \nonumber \\
+    y_2' &= - 2 x_2 + \left(
+        1 - \frac{\alpha}{r_1^3}
+        - \frac{\mu}{r_2^3}
+    \right) y_1, \label{eq:reduce_3_body_prog_sys} \\
+\end{align}
+
+where 
+
+\begin{align}
+    r_1 &= \left[(x_1 - \mu)^2 + y_1^2\right]^{\frac{1}{2}} \nonumber \\
+    r_2 &= \left[(x_1 + \alpha)^2 + y_1^2\right]^{\frac{1}{2}}.
+\end{align}
+
+Here, $x_1$ and $y_1$ represent the position of the third body relative to the other two,
+but not in the standard 
+Cartesian coordinates of 3D space. Outlined in the paper \cite{eberle2007case}, the 
+transformation back to Cartesian coordinates is given, but we don't need the exact 
+position of the bodies since we are only concerned with the chaotic motion, so that isn't 
+shown here.
+
+There are however two issues when integrating this problem. As objects approach each
+other, the distance between them 
+approaches zero. If we have a collision, then this approaches infinity. There is no 
+collision detection in this model as we assume falsely that each body has a radius of zero,
+so this case is not handled. Instead, we will get a 
+divide by zero error, and the model cannot be calculated further. Further, near collisions 
+are also an issue. Detailed in \cite{chambers1999hybrid}, with the distance between bodies 
+approaching zero, their potential energy becomes significantly smaller than other values, 
+such as those describing kinetic energy. This 
+produces a stiff system of equations, and introduces error. Since energy is conserved in
+this system (as it is a Hamiltonian system), the error introduced represents energy being 
+created. This causes the singularity property seen in Figure \ref{fig:singularity}
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{images/r3b_collision.png}
+        \caption{The restricted 3 body problem with collision}
+        \label{fig:r3b_collision}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{images/r3b_collision_whole.png}
+        \caption{The resultant divergence of the body}
+        \label{fig:r3b_collision_whole}
+    \end{subfigure}
+    \caption{The Double Pendulum}
+    \label{fig:doub_pend}
+\end{figure}
+
+
+
+
+While it is possible to solve this issue with symplectic integrators \cite{chambers1999hybrid}, 
+
 \subsection{Double Pendulum}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=.5\linewidth]{images/example_doub_pend.png}
+    \caption{The Double Pendulum}
+    \label{fig:doub_pend}
+\end{figure}
+
 
 The double pendulum is commonly cited to be chaotic 
 \cite{stachowiak2006numerical} \cite{levien1993double}. Using the system 
@@ -219,6 +390,24 @@ defined as follows:
     }. \label{eq:doub_pen}
 \end{align}
 
+$\theta_1$ and $\omega_1$ represent the angle and angular velocity of the inner pendulum 
+where $\theta_1=0$ implies the pendulum is straight down, and $\theta_1=\epsilon$ implies 
+the pendulum is rotated $\epsilon$ radians counter-clockwise. The same is true for the 
+outer pendulum relative to its pivot point, the end of the first pendulum. $l_1$ and $l_2$ 
+are the lengths of the inner and outer pendulums, respectively. $m_1$ and $m_2$ are the 
+masses of the balls on the end points of the inner and outer pendulums, respectively.
+Then, the positions of the endpoints $(x_1$, $y_1)$ and $(x_2, y_2)$ of the pendulum, with 
+the center pivot at the origin, $(0, 0)$, can be calculated as follows:
+
+\begin{align}
+    x_1 &= l_1 \sin(\theta_1), \nonumber \\
+    y_1 &= - l_1 \cos(\theta_1), \nonumber \\
+    x_2 &= x_1 + l_2 \sin(\theta_2), \nonumber \\
+    y_2 &= y_1 - l_2 \cos(\theta_2), \label{eq:doub_pend_endpoints}
+\end{align}
+
+% TODO: position of the pendulum end points
+
 While the system is a Hamiltonian system, Stachowiak decided to define the first order 
 derivative components as angular velocity as opposed to momentum. This won't affect
 anything regarding the purpose of this paper.
@@ -229,17 +418,17 @@ In the experiment, the initial conditions had angular velocities of zero, the ou
 pendulum was straight down, and the inner pendulum varied from 0 degrees to 180 degrees 
 \cite{levien1993double}; the results showed that the LCE increased with theta. 
 
-Repeating the same experiment, but with different parameters, the results are similar (see 
-Figure \ref{fig:doub_pend_energy}).
+Repeating the same experiment, but with different parameters ($l_1 = l_2 = 1$, and
+$m_1 = m_2 = 1$), the results are similar (see Figure \ref{fig:doub_pend_energy}).
+As inner theta increases, the largest LCE of the system seems to
+approach 1.4. % DATA POINT
 
 \begin{figure}[H]
     \centering
-    \includegraphics[.5\linewidth]{images/chaos_vs_energy_in_doub_pend.png}
+    \includegraphics[width=.5\linewidth]{images/chaos_vs_energy_in_doub_pend.png}
     \caption{Largest Lyapunov Characteristic Exponent vs Inner Theta Initial Condition}
     \label{fig:doub_pend_energy}
 \end{figure}
-
-
 
 %%% MODELS %%%
 \section{Models}
