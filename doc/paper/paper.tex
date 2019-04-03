@@ -19,6 +19,7 @@
 % the comment 'DATA POINT' will mark where data was calculated and then inserted into
 % the paper.
 
+\newcommand{\echonn}{\texttt{echonn}}
 \newcommand{\der}[2][t]{\frac{\mathrm{d}#2}{\mathrm{d}#1}}
 
 \title{Time Series Analysis of Chaotic Dynamical Systems with Recurrent Neural Networks}
@@ -126,12 +127,103 @@ effectiveness of forecasting models on chaotic problems
 interval of time which is multiple times the size of the Lyapunov time shows
 the predictability of a model.
 
+\subsection{Calculating the Largest Lyapunov Characteristic Exponent}
+
 In order to find the Lyapunov time, we only need to solve for the largest
-LCE. To find this, we will use a method detailed in
+LCE. To find this, we will use the following method detailed in
 \cite{viswanath1998lyapunov}.
 
-% TODO: Lyapunov calculation
-% TODO: Test with Circle yielding zero
+\newcommand{\xv}{\mathbf{x}}
+\newcommand{\fv}{\mathbf{f}}
+\newcommand{\Mv}{\mathbf{M}}
+
+The dynamical system will be defined by $\der{\xv}=\fv(\xv)$ where $\fv, \xv \in 
+\mathbb{R}^d$. Given an initial condition $\xv_0$, the largest LCE, denoted 
+$\lambda_1$, is calculated as follows:
+
+\begin{equation}
+    \lambda_1 = \lim_{t \to \infty} \frac{1}{t}\log \sigma_1(\frac{\partial \xv(t)}{\partial \xv_0}) \label{eq:max_lce}
+\end{equation}
+
+where $\sigma_1$ is the first singular value of the matrix $\frac{\partial 
+\xv(t)}{\partial \xv_0}$ and $\log$ is the natural logarithm. Since we can only 
+numerically approximate the limit for $\lambda_1$, we will need to use a
+sufficiently large $t$ until the limit converges to the accuracy we need.
+
+In order to calculate $\frac{\partial \xv(t)}{\partial \xv_0}$, we need to integrate the matrix differential equation:
+
+\begin{equation}
+    \der{\Mv(t)} = \frac{\partial \fv}{\partial \xv} \Mv(t)
+    \label{eq:lce_mat_diffeq}
+\end{equation}
+
+where $\Mv(t) \in \mathbb{R}^{d \times d}$ and $\frac{\partial \fv}{\partial \xv}$
+is the $d \times d$ Jacobian matrix of $\fv(\xv)$ at $\xv(t)$.
+
+Since values for $\xv(t)$ are needed as well, the systems will be integrated 
+together. If the dynamical system has dimensions $d$, then the new system of
+differential equations will have dimension $d + d \times d$. For larger dynamical 
+systems, this calculation becomes costly. The dynamical systems analyzed are
+small enough (having dimensions ranging from 3-4) that the calculation can be 
+performed timely and accurately.
+
+There are several issues with calculating $\lambda_1$ with this algorithm.
+Already mentioned, we need to choose a sufficiently
+large $t$ for the limit to converge. 
+Unfortunately, for chaotic systems, $\Mv$ will increase rapidly with time. The 
+large floating point values will eventually overflow and $\lambda_1$ will not
+be accurate. I have found empirically that if values of $\Mv$ don't exceed 
+$10^{100}$, then $\lambda_1$ will be accurate.
+
+Implemented in \echonn, the algorithm was tested on the Lorenz system for various 
+parameters and initial conditions. The LCEs match the expected values very 
+accurately (see the Lorenz System section: \ref{sec:lorenz}).
+The 3 dimensional 3-body problem is an 18 dimensional dynamical system, so while 
+the dynamical system is implemented in \echonn, its max LCE can't be calculated 
+accurately since the resultant system has 342 dimensions. The algorithm was 
+also tested on the differential equation which produces a circle:
+
+\begin{align*}
+    x' &= y \\
+    y' &= -x
+\end{align*}
+
+with the solution 
+
+\begin{align*}
+    x(t) &= r\sin(t) \\
+    y(t) &= r\cos(t)
+\end{align*}
+
+for any $r \in \mathbb{R}$.
+
+Given an initial condition $(x_0, y_0)$, it produces the trajectory of a circle
+with radius $r=\sqrt{x_0^2 + y_0^2}$. If perturbed, the radius will change, 
+$r_\epsilon=\sqrt{(x_0+\epsilon_x)^2 + (y_0+\epsilon_y)^2}$, so the new 
+trajectory is 
+
+\begin{align*}
+    x_\epsilon(t) &= r_\epsilon\sin(t) \\
+    y_\epsilon(t) &= r_\epsilon\cos(t).
+\end{align*}
+
+Now, the $L^2$ norm of error is 
+\begin{align*}
+    \sqrt{(x_\epsilon - x)^2 + (y_\epsilon - y)^2} &= \sqrt{(r_\epsilon - r)^2\sin^2(t) + (r_\epsilon - r)^2\cos^2(t)} \\
+    &= \sqrt{(r_\epsilon - r)^2(\sin^2(t) + \cos^2(t))^2} \\
+    &= \sqrt{(r_\epsilon - r)^2} \\
+    &= \vert r_\epsilon - r \vert.
+\end{align*}
+
+The error doesn't grow at all over time, so the LCE should be less than or equal to zero as the system is not chaotic. The algorithm reports an LCE of $-1.15954 \times 10^{-06}$ as expected.
+
+Empirically shown, \echonn can be used to identify the max LCE of smaller 
+dynamical systems, and special precaution has to be taken when choosing a 
+time interval. Using a larger time will yield a more accurate $\lambda_1$, but 
+it may also cause an overflow if the system is chaotic. Thus, 
+maximum time values need to be chosen such that $\vert \vert \Mv\vert 
+\vert_{\infty}$ doesn't exceed $10^{100}$ (where $\vert \vert \cdot \vert 
+\vert_{\infty}$ is the $L^\infty$ norm).
 
 %%% DYNAMICAL SYSTEMS %%%
 \section{Dynamical Systems}
@@ -144,11 +236,11 @@ referred to as chaotic, and I will show this later. Both Poincaré's
 restricted 3 body problem solution and the double pendulum are Hamiltonian
 systems representing physical systems within our universe.
 
+
 % TODO: numerical solutions section
 
 \subsection{Lorenz System}
-
-% TODO: Image of Lorenz System
+\label{sec:lorenz}
 
 The Lorenz system was originally based on a system of equations modeling
 convection created by Saltzman \cite{lorenz1963deterministic}
@@ -167,8 +259,8 @@ $\rho=28$ \cite{lorenz1963deterministic}, and it has a maximum LCE of
 $0.90566$ \cite{viswanath1998lyapunov}. There are other parameters which
 produce chaotic results outlined in Table \ref{table:lorenz_params}. Also
 shown in Table \ref{table:lorenz_params} are the values calculated by my
-Python module \texttt{echonn} are listed. These values are not as accurate,
-but demonstrate the sufficient accuracy of \texttt{echonn}.
+Python module \echonn are listed. These values are not as accurate,
+but demonstrate the sufficient accuracy of \echonn.
 
 \begin{table}[H]
     \centering
@@ -176,7 +268,7 @@ but demonstrate the sufficient accuracy of \texttt{echonn}.
          % TODO: \lambda_1?
          % TODO: calculated values
         \hline
-        $\sigma$ & $\rho$ & $\beta$ & actual $\lambda$ & calculated $\lambda$ & relative error of calculated $\lambda$ \\
+        $\sigma$ & $\rho$ & $\beta$ & actual $\lambda_1$ & calculated $\lambda_1$ & relative error of calculated $\lambda_1$ \\
         \hline \hline
         16 & 45.92 & 4 & 1.50255 & & \\ % DATA POINTS
         16 & 40 & 4 & 1.37446 & & \\
@@ -189,6 +281,26 @@ but demonstrate the sufficient accuracy of \texttt{echonn}.
     }
     \label{table:lorenz_params}
 \end{table}
+
+The Lorenz system is named after its creator, but it is also known as the
+Lorenz butterfly due to the shape of the attractor of the system. The Lorenz
+Butterfly can be seen in Figure \ref{fig:lorenz_butter}.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.6\textwidth}
+        \includegraphics[width=\textwidth]{images/lorenz_nd_plot.png}
+        \caption{Plot of each dimension of Lorenz System}
+        \label{fig:lorenz_nd}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.6\textwidth}
+        \includegraphics[width=\textwidth]{images/lorenz_3d_plot.png}
+        \caption{The Lorenz Butterfly}
+        \label{fig:lorenz_3d}
+    \end{subfigure}
+    \caption{The Lorenz System Visuals}
+    \label{fig:lorenz_butter}
+\end{figure}
 
 \subsection{3-Body Problem}
 
@@ -235,8 +347,9 @@ differential equations yields 18 first order equations. The reduced problem
 only requires 4 first order differential equations since the position is
 defined by two second order differential equations.
 
-Derived in \cite{eberle2007case}, the system of equations defined with
-dimensionless rotating (synodic) coordinates:
+Derived in two independent papers \cite{eberle2007case} and \cite{frnkacase},
+the system of equations defined with dimensionless rotating (synodic)
+coordinates:
 
 \begin{align}
     x'' - 2 y' &= x
@@ -258,6 +371,16 @@ where
 \end{align}
  
 and where mass body 1 and two are located at $-\alpha$ and $\mu$.
+
+Although the notation in both papers was different, the equations were the same. 
+It's also worth mentioning that Eberle's paper was for his Masters Thesis, and 
+Frnka's paper has no details associated with it, but I was able to find a 
+mathematician with the exact name who achieved his doctorate. With that said, 
+I believe the math is reliable, and the simulations seem to work and at least 
+demonstrate chaotic properties (the only requirement for this project). With my
+lacking physics knowledge, I was unable to derive these equations myself from
+the assumptions made by Henri Poincaré outlined in 
+\cite{chenciner2000remarkable}.
 
 If we define the following system:
 
@@ -324,7 +447,7 @@ where
 
 Here, $x_1$ and $y_1$ represent the position of the third body relative to
 the other two, but not in the standard Cartesian coordinates of 3D space.
-Outlined in the paper \cite{eberle2007case}, the transformation back to
+Outlined in the both papers, \cite{eberle2007case} and \cite{frnkacase}, the transformation back to
 Cartesian coordinates is given, but we don't need the exact position of the
 bodies since we are only concerned with the chaotic motion, so that isn't
 shown here.
