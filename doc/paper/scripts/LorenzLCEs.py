@@ -7,6 +7,7 @@ if __name__ == "__main__":
         [16, 40, 4, 1.37446],
         [10, 28, 8/3, 0.90566],
     ]
+    results = []
     for sigma, rho, beta, lambda_ in data:
 
         lces = []
@@ -29,3 +30,10 @@ if __name__ == "__main__":
         res['relative error'] = res['error'] / lambda_
         print(res)
         print()
+        results.append(res)
+
+    print('results:')
+    for result in results:
+        toprint = [res['beta'], res['rho'], res['sigma'], res['lambda'],
+                   res['mean'], res['error'], res['relative error']]
+        print('        ' + ' & '.join(toprint))
