@@ -16,7 +16,7 @@ if __name__ == "__main__":
             sys = LorenzSystem(sigma, rho, beta)
             slv = SystemSolver(sys)
 
-            lce, _ = slv.get_lce(T=150)
+            lce, _ = slv.get_lce()
             print('\t{}:'.format(i), lce)
             lces.append(lce)
         res = {}
@@ -33,7 +33,8 @@ if __name__ == "__main__":
         results.append(res)
 
     print('results:')
-    for result in results:
+    for res in results:
         toprint = [res['beta'], res['rho'], res['sigma'], res['lambda'],
-                   res['mean'], res['error'], res['relative error']]
+                   res['mean'], res['relative error']]
+        toprint = [str(v) for v in toprint]
         print('        ' + ' & '.join(toprint))
