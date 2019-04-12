@@ -3,9 +3,10 @@ import numpy as np
 
 
 class DynamicalSystem(ABC):
-    def __init__(self, dim=1, method='RK45'):
+    def __init__(self, dim=1, method='RK45', best_lce_T=1):
         self.dim = dim
         self._method = method
+        self.best_lce_T = best_lce_T
 
     @abstractmethod
     def fun(self, t, v):

@@ -2,10 +2,11 @@ from copy import deepcopy
 import numpy as np
 from ..sys import SystemSolver
 from . import EchoStateNetwork
+import itertools
 
 
 class ESNExperiment:
-    def __init__(self, Model, lce_T, time_steps_per_lce_time=1000):
+    def __init__(self, Model, time_steps_per_lce_time=1000):
         """ Model is the dynamical system to test with """
         self.ModelClass = Model  # assign the class not initialize it
         self.time_steps_per_lce_time = time_steps_per_lce_time

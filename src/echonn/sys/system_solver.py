@@ -61,7 +61,7 @@ class SystemSolver:
         lce = np.log(svd)/T
         return lce
 
-    def quick_lce(self, T=1000, y0=None, partition=None, **kwargs):
+    def quick_lce(self, T=None, y0=None, partition=None, **kwargs):
         """
         y0 - will be set randomly and then run through the system for a
         little
@@ -70,6 +70,8 @@ class SystemSolver:
         computation) (defaults to T)
         kwargs - are passed to the run parameters of SystemSolver
         """
+        if T is None:
+            T = self.system.best_lce_T
         if partition is None:
             partition = T
         sys_dim = self.system.dim
@@ -110,13 +112,15 @@ class SystemSolver:
         tspan[-1] = T
         return tspan, lces
 
-    def get_lce(self, T=1000, y0=None, **kwargs):
+    def get_lce(self, T=None, y0=None, **kwargs):
         """
         T - should be set manually to a reasonable value.
         y0 - will be set randomly and then run through the system for a
         little
         kwargs - are passed to the run parameters of SystemSolver
         """
+        if T is None:
+            T = self.system.best_lce_T
         sys_dim = self.system.dim
         # create the lyapunov system
         lce_system = LyapunovSystem(self.system)

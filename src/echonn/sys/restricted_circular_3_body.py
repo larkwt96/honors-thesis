@@ -4,7 +4,7 @@ from .system import DynamicalSystem
 
 class RestrictedCircular3Body(DynamicalSystem):
     def __init__(self, body_ratio=0.5, method='BDF'):
-        super().__init__(4, method)
+        super().__init__(4, method, 100)  # TODO: verify this
         if body_ratio < 0 or 1 < body_ratio:
             raise ValueError('body_ratio should be in range [0, 1]')
         self.mu = body_ratio

@@ -3,7 +3,7 @@ from .system import DynamicalSystem
 
 class LorenzSystem(DynamicalSystem):
     def __init__(self, sigma=10, rho=28, beta=8/3, method='RK45'):
-        super().__init__(3, method)
+        super().__init__(3, method, 150)
         self.sigma = sigma
         self.rho = rho
         self.beta = beta

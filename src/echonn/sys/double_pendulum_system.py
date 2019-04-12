@@ -14,7 +14,7 @@ class DoublePendulumSystem(DynamicalSystem):
     """
 
     def __init__(self, m1=1, m2=1, l1=1, l2=1):
-        super().__init__(4, 'BDF')
+        super().__init__(4, 'BDF', 100)
         self.m1 = m1
         self.m2 = m2
         self.l1 = l1
