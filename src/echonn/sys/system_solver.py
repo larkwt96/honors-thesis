@@ -58,7 +58,7 @@ class SystemSolver:
         if svd <= 0:
             return -np.inf
         # calculate lyapunov exponent
-        lce = np.log(svds[0])/T
+        lce = np.log(svd)/T
         return lce
 
     def quick_lce(self, T=1000, y0=None, partition=None, **kwargs):

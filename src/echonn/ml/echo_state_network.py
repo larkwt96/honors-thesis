@@ -8,7 +8,7 @@ class EchoStateNetwork(TimeSeriesForecaster):
     def __init__(self, K, N, L, T0=50, alpha=.8, noise=0.0, f=None, g=None, g_inv=None):
         """
         K - input units, u
-        N - internal units, x
+        N - internal units, x (should not exceed Tf/10 to Tf/2 at risk of overfitting
         L - output units, y
         T0 - how long does it take for transient dynamics to wash out (10 for
         small, fast nets to 500 for large, slow nets). T is the sampling range, set by the train call.
@@ -16,6 +16,7 @@ class EchoStateNetwork(TimeSeriesForecaster):
         Specifies whether the algorithm should feed noise into the model
         during sampling. Uniform distribution ranging from [-noise, noise].
         """
+        # TODO: implement bias
         self.shapes = [
             (N, K),
             (N, N),
@@ -96,7 +97,9 @@ class EchoStateNetwork(TimeSeriesForecaster):
 
     def score(self, ds, ys, T, Tf=None, T0=None):
         """
+        ds is be what ys should be (not what what passed to predict but more)
         ys should be what was returned by predict
+        T is 1 indexed
         """
         if T0 is None:
             T0 = self.T0
@@ -105,6 +108,7 @@ class EchoStateNetwork(TimeSeriesForecaster):
         train_d = ds[T0:T]
         train_y = ys[T0:T]
         train_rmse = self.rmse(train_d, train_y)
+        # Tf as None means index to the end.
         test_d = ds[T:Tf]
         test_y = ys[T:Tf]
         test_rmse = self.rmse(test_d, test_y)

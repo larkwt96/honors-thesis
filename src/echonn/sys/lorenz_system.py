@@ -2,7 +2,7 @@ from .system import DynamicalSystem
 
 
 class LorenzSystem(DynamicalSystem):
-    def __init__(self, sigma=10, rho=28, beta=8/3, method='BDF'):
+    def __init__(self, sigma=10, rho=28, beta=8/3, method='RK45'):
         super().__init__(3, method)
         self.sigma = sigma
         self.rho = rho

@@ -11,6 +11,9 @@ class DynamicalSystem(ABC):
     def fun(self, t, v):
         return v
 
+    # TODO get lce T value from empirical results
+    # TODO get random IC
+
     def Dfun(self, t, v):
         ''' This ignores t '''
         eps = np.sqrt(np.finfo(np.float64).eps)
