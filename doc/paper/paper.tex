@@ -42,6 +42,11 @@ This is a paper about chaos.
 %%% INTRODUCTION %%%
 \section{Introduction}
 
+Neural Networks are known to be able to approximate any function given 
+enough data and time to train \cite{cybenko1989approximation}.
+In light of this, the hope is that a deep learning based model,
+the ESN, will outperform ARIMA.
+
 This is a paper about chaos.
 % TODO: Intro
 % TODO: mention \texttt{echonn}
@@ -49,7 +54,7 @@ This is a paper about chaos.
 %%% CHAOS %%%
 \section{Chaos}
 
-\subsection{History}
+%\subsection{History}
 
 In 1963, Edward N. Lorenz published an article researching a simplified
 system of ordinary differential equations modeling a convective system
@@ -109,8 +114,6 @@ Lyapunov Characteristic Exponents (LCEs) \cite{sandri1996numerical}. There is
 an LCE for each dimension, and since they all represent exponential growth.
 The error growing at the rate of the largest LCE will dominate over the
 others.
-
-% TODO: talk about attractors
 
 Given a small perturbation $\epsilon$ to a dynamical system in the direction
 of the largest LCE, we can approximate the growth of the perturbation by the
@@ -207,7 +210,7 @@ trajectory is
     y_\epsilon(t) &= r_\epsilon\cos(t).
 \end{align*}
 
-Now, the $L^2$ norm of error is 
+Now, the $\ell^2$ norm of error is 
 \begin{align*}
     \sqrt{(x_\epsilon - x)^2 + (y_\epsilon - y)^2} &= \sqrt{(r_\epsilon - r)^2\sin^2(t) + (r_\epsilon - r)^2\cos^2(t)} \\
     &= \sqrt{(r_\epsilon - r)^2(\sin^2(t) + \cos^2(t))^2} \\
@@ -223,7 +226,7 @@ time interval. Using a larger time will yield a more accurate $\lambda_1$, but
 it may also cause an overflow if the system is chaotic. Thus, 
 maximum time values need to be chosen such that $\vert \vert \Mv\vert 
 \vert_{\infty}$ doesn't exceed $10^{100}$ (where $\vert \vert \cdot \vert 
-\vert_{\infty}$ is the $L^\infty$ norm).
+\vert_{\infty}$ is the $\ell^\infty$ norm).
 
 %%% DYNAMICAL SYSTEMS %%%
 \section{Dynamical Systems}
@@ -236,8 +239,39 @@ referred to as chaotic, and I will show this later. Both Poincaré's
 restricted 3 body problem solution and the double pendulum are Hamiltonian
 systems representing physical systems within our universe.
 
+\subsection{Numerical Integration Methods}
 
-% TODO: numerical solutions section
+In order to generate the data to be analyized, the solutions to these 
+dynamical systems need to be computed. Each of the systems are defined by 
+a system of differential equations which can be numerically solved. 
+However, due to the chaotic nature, error introduced by the numerical 
+solution will grow exponentially, so precaution need to be taken to avoid 
+having this sort of error introduced into the collected data. When 
+numerically solving chaotic problems, it's possible for the chaotic 
+behavior to be suppressed, or where there shouldn't be chaotic behavior,
+it could be created \cite{corless1994good}.
+
+However, it's been shown that the Fourth Order Runge-Kutta Method (RK4)
+outperforms other numerical methods such as Euler's Method and the
+Midpoint Method for chaotic systems \cite{zidan2011effect}.
+Not only does RK4 perform better than other methods, it serves as a good
+method for producing accurate numerical solutions to choatic systems with 
+small enough time steps: the Lü chaotic system \cite{mehdi2017using} and
+the Zhou system \cite{roslan2013solving}, for example. One article points
+out that a larger concern 
+regarding these solutions is the accuracy of the initial conditions 
+measured from the physical problem which the mathematical model is based,
+but otherwise, they echo the strength of correctly implemented 
+numerical solutions \cite{corless1994good}. Further, my initial conditions
+are randomly generated, so this is not a concern.
+
+I will be using an improved version of RK4 which
+incorporates the fifth order Runge-Kutta: RK4(5)
+\cite{dormand1980family}. This is the method implemented in
+the Python function \texttt{scipy.integrate.solve\_ivp}, and my
+numerical solver
+wraps this function to integrate the chaotic systems. Using small time
+steps will yield accurate samples from the chaotic systems.
 
 \subsection{Lorenz System}
 \label{sec:lorenz}
@@ -283,7 +317,7 @@ but demonstrate the sufficient accuracy of \echonn.
 \end{table}
 
 The Lorenz system is named after its creator, but it is also known as the
-Lorenz butterfly due to the shape of the attractor of the system. The Lorenz
+Lorenz butterfly due to the shape of the system. The Lorenz
 Butterfly can be seen in Figure \ref{fig:lorenz_butter}.
 
 \begin{figure}[H]
@@ -370,7 +404,7 @@ where
     r_2(t) &= \left[(x(t) + \alpha)^2 + y(t)^2\right]^{\frac{1}{2}} \label{eq:reduc_3body_cor}
 \end{align}
  
-and where mass body 1 and two are located at $-\alpha$ and $\mu$.
+and where mass body one and two are located at $-\alpha$ and $\mu$.
 
 Although the notation in both papers was different, the equations were the same. 
 It's also worth mentioning that Eberle's paper was for his Masters Thesis, and 
@@ -577,12 +611,361 @@ system seems to approach 1.4. % DATA POINT
     \label{fig:doub_pend_energy}
 \end{figure}
 
-%%% MODELS %%%
-\section{Models}
+\section{The Echo State Network}
 
-\subsection{ARIMA}
-%\subsection{Recurrent Neural Networks}
-\subsection{Echo State Networks}
+\newcommand{\Tv}{\mathbf{T}}
+\newcommand{\Uv}{\mathbf{U}}
+\newcommand{\Dv}{\mathbf{D}}
+\newcommand{\tv}{\mathbf{t}}
+\newcommand{\uv}{\mathbf{u}}
+\newcommand{\dv}{\mathbf{d}}
+\newcommand{\yv}{\mathbf{y}}
+\newcommand{\Fv}{\mathbf{F}}
+\newcommand{\wv}{\mathbf{w}}
+
+The Echo State Network (ESN) is a type of Recurrent Neural Network (RNN)
+used for time series analysis, but it is trained differently than most
+RNNs and is 
+characterized by having the echo state property. I implement the design
+detailed by Jaeger in is 2002 book \cite{jaeger2002tutorial} and
+further detailed in his 2007 article \cite{jaeger2007echo}.
+
+A time series data set will contain samples of data which change
+over time. Part of the data at each time point is measured or known
+before, called input data and denoted by $\uv(t)$ with $K$ dimensions.
+The rest of the data will be the goal for prediction, called output data and denoted $\dv(t)$ with $L$ dimensions. 
+
+For $T$ time samples, $t_1, t_2, \dots, t_T$, we have a $T \times K$ 
+matrix, $\Uv$, with sample input vectors as rows. We also
+have a $T \times L$ matrix,
+$\Dv$, with sample output vectors as rows. A model will predict the 
+values of $\dv$, and this prediction will be denoted $\yv$.
+
+\subsection{Recurrent Neural Networks and Traditional Training Method}
+\label{sec:rnn}
+RNNs are usually designed by having $K$ input units, $L$ output units, 
+and some internal units organized by some network structure. These units
+have evolving values for every time point. The
+structure of networks describes how units are connected. 
+The input units at time $t_i$ are set to $\uv(t_i)$. However, output
+units and
+internal units are calculated from the values of other units. These other 
+units are said to be connected to the resultant unit. Output
+units are calculated from current input units, current internal units,
+and from previous output units. Internal units 
+are calculated from the values of the current input units, 
+previous internal units, and previous output units.
+
+Although, it's rare that the output units are calculated from previous 
+output units \cite{jaeger2002tutorial}. Sometimes for training, the output 
+units are set to the value of $dv$, called teacher forcing, so that the 
+model trains on actual values as opposed to its accumulated errors 
+\cite{jaeger2002tutorial}.
+
+To calculate the value of a unit, an activation function is applied to a 
+linear combination of the units connected to it \cite{svozil1997introduction}. The constants for the 
+linear combination are called weights, and they are parameters of the 
+model. Which activation function is used is also a parameter of the 
+function. Typically, some non-linear function is used, such as $\tanh$, 
+sigmoid, or rectified linear unit.
+
+During training, we search for
+weights which maximize the model's performance on data
+which the model hasn't seen. A common training method for RNNs
+is to use a form of backpropagation \cite{jaeger2002tutorial}. 
+Backpropagation for RNNs is slightly different from traditional Neural Networks, but the idea is the same.
+
+For example, given some neural network model $\yv(\xv; \wv)$, where
+$\xv$ is known input data, $\wv$ is the model's parameters, and $\yv$ 
+approximates some values, $\tv$, then we define an objective 
+function as the sum of squared error:
+
+\newcommand{\Ev}{\mathbf{E}}
+
+\begin{equation}
+    \Ev(\xv; \wv) = \vert \vert \yv(\xv; \wv) - \tv \vert \vert_2^2.
+    \label{eq:error_eq_rnn}
+\end{equation}
+
+Using steepest descent to solve this minimization problem (as shown in 
+\cite{svozil1997introduction}), we can
+reduce $\Ev$ in (\ref{eq:error_eq_rnn}) by
+updating the weights as follows:
+
+\begin{equation}
+    \wv = \wv - \lambda \nabla_\wv \Ev
+\end{equation}
+
+for some learning rate $\lambda$.
+
+\subsection{Echo State Network Implementation}
+
+The implementation design used for this paper is detailed by Herbert Jaeger
+in \cite{jaeger2002tutorial} and \cite{jaeger2007echo}. I explain it here 
+to clarify my exact process (and with a slight change of notation to be 
+consistent with the rest of this paper).
+
+Like RNNs, ESNs have an input layer with $K$ units and with values 
+$\uv(t_1), \uv(t_2), \dots,  \uv(t_T)$ where $\uv(t) \in \mathbb{R}^K$.
+$K$ is zero if there are no input units. There is an internal layer
+with $N$ units, denoted by $\xv(t_i) \in \mathbb{R}^N$ for
+$i = 1, 2, \dots, T$, and 
+there is an output 
+layer with $L$ units, denoted by $\yv(t_i) \in \mathbb{R}^L$ for all
+$i = 1, 2, \dots, T$.
+
+\newcommand{\W}{\mathbf{W}}
+\newcommand{\Win}{\mathbf{W}_{in}}
+\newcommand{\Wback}{\mathbf{W}_{back}}
+\newcommand{\Wout}{\mathbf{W}_{out}}
+
+How the units are connected can vary, but the suggested way 
+\cite{jaeger2002tutorial} is to connect the internal layer to the current 
+input layer, the previous internal layer, and the previous output layer. 
+These connections will have weights described in \ref{sec:rnn}. 
+Respectively, these weights will be denoted by the matrices:
+$\Win$, $\W$, and $\Wback$. The activation function for the internal
+layer is $\tanh$.
+
+The output layer is connected to the current input layer and current 
+internal layer. The weight for these connections will be denoted $\Wout$ 
+(we only have one matrix since the connected layers are concatenated into a
+single vector, per Jaeger's notation \cite{jaeger2002tutorial}). The 
+activation function for these connections is linear. Although, the 
+recommended choice
+is $\tanh$, the output layer doesn't necessarily lie in the range of 
+$\tanh$, so it can't be used without some form of normalization.
+
+In mathematical notation, the model is defined as follows:
+
+\begin{align}
+    \xv(t_{i}) &= \tanh \left(
+            \Win \uv(t_i)
+            + \W \xv(t_{i-1})
+            + \Wback \yv(t_{i-1})
+        \right) \\
+    \yv(t_i) &= \Wout (\uv(t_i), \xv(t_i))_{\text{concat}}.
+\end{align}
+
+$\xv$ and $\yv$ are calculated from previous unit values but for the 
+first time step, there are none, so we need to initialize the
+units to zeros \cite{jaeger2002tutorial}. 
+This is done by defining $\xv(t_0)$ and $\yv(t_0)$ to zeros.
+
+The weights are initialized such that the model has the defining 
+characteristic of echo state networks: the echo state property
+(Section \ref{sec:eprop}).
+During the training phase (Section \ref{sec:etrain}), $\Wout$ is fit to
+the training data. 
+
+Once the network has been initialized and trained, it can be used to 
+perform time series analysis.
+
+\subsection{The Echo State Property}
+\label{sec:eprop}
+
+The echo state property is defined by the following \cite{jaeger2002tutorial}:
+
+\begin{quote}
+    Assume an untrained network with weights $\Win$, $\W$, and $\Wback$ is 
+    driven by teacher input $\uv(n)$ and teacher-forced by teacher output 
+    $\dv(n)$ from compact intervals $\Uv$ and $\Dv$. The network ($\Win$, 
+    $\W$, and $\Wback$) has echo states w.r.t. $\Uv$ and $\Dv$, if for 
+    every left-infinite input/output sequence $(\uv(n), \dv(n-1))$, where 
+    $n=\dots, -2, -1, 0$, and for all state sequences $\xv(n)$,
+    $\xv'(n)$ compatible with the teacher sequence, i.e. with
+    \begin{align}
+        \xv(n) &= \tanh \left(
+                \Win \uv(n)
+                + \W \xv(n-1)
+                + \Wback \yv(n-1)
+            \right) \\
+        \xv'(n) &= \tanh \left(
+                \Win \uv(n)
+                + \W \xv'(n-1)
+                + \Wback \yv(n-1)
+            \right)
+    \end{align}
+    it holds that $\xv(n) = \xv'(n)$ for all $n \leq 0$.
+\end{quote}
+
+The idea is that if the network is run long enough, it will, in a sense, 
+forget long past input and focus only on the most recent input. If two 
+networks with differing internal states are run with the same input and 
+teacher-forced output, they will eventually converge to each other.
+It's name suggests data fed to the model will echo around but eventually 
+fade as echos do.
+
+Jaeger outlines a process to create weights which will likely have
+echo state properties. The process is posed as conjecture and 
+doesn't guarantee the echo state property. However, the echo state is very 
+likely and can be
+assumed confidently \cite{jaeger2002tutorial} \cite{jaeger2007echo}.
+
+To demonstrate the echo state property, initialize the network with random 
+values. Set user input (if any) and teacher-forced output units to zero,
+After enough iterations, the internal state should converge to zero.
+
+The process to initialize the echo state weights, $\W$, is as follows \cite{jaeger2002tutorial}:
+
+\newcommand{\specrad}{\vert \lambda_\text{max} \vert}
+\begin{enumerate}
+    \item Initialize an $N \times N$ matrix, $\W_0$, with values from a 
+    uniform distribution in $[-1, 1]$.
+    \item Calculate the spectral radius, $\specrad$, of $\W_0$, i.e., the 
+    maximum absolute value of the eigenvalues of $\W_0$.
+    \item Normalize $\W_0$ to $\W_1$ so that it has unit spectral radius:
+    $\W_1 = \frac{1}{\specrad} \W_0$
+    \item Choose parameter $\alpha < 1$. Typically, $\alpha$ lies in
+    the range $(0.7, 0.98)$ \cite{jaeger2002tutorial}. This number will 
+    represent the new spectral radius of $\W$.
+    \item Scale $\W_1$ to $\W_2$ to have a spectral radius of
+    $\alpha$: $\W_2 = \alpha \W_1$. Now, let $\W = \W_2$, and the model
+    will have the echo state property \cite{jaeger2002tutorial}.
+\end{enumerate}
+
+If the spectral radius of $\W$ is found to be greater than 1, then it can 
+be shown that the model doesn't demonstrate the echo state property; 
+Jaeger's process uses this fact by ensuring that this isn't the case 
+\cite{jaeger2002tutorial}. While it can't guarantee an echo state property,
+the resultant matrix does have the property frequently enough that it's a
+reliable process. In his words, the model "has always been found to be an 
+echo state network" \cite{jaeger2002tutorial}.
+
+\newcommand{\vv}{\mathbf{v}}
+
+Applying linear algebra, this makes a lot of sense. Let $A$ be an
+$N \times N$ matrix with spectral radius $r = \rho(A) > 0$ and denote its
+eigenvalues $\lambda_i$ and eigenvectors $\vv_i$ for
+$i = 1, 2, \dots, N$.  Then, define $B = \frac{\alpha}{r} A$.
+
+By definition, $\vv_i A = \lambda_i \vv_i$, so 
+\begin{align*}
+   \vv_i B &= \frac{\alpha}{r} \vv_i A \\
+   &= \frac{\alpha}{r} \lambda_i \vv_i
+\end{align*}
+
+Therefore, $B$ has eigenvalues $\frac{\alpha}{r} \lambda_i$ for all $i$. 
+Further, its spectral radius is then
+
+\begin{align*}
+    \vert\vert \frac{\alpha}{r} \lambda \vert\vert_\infty
+    &= \frac{\alpha}{r} \vert\vert \lambda \vert\vert_\infty \\
+    &= \frac{\alpha}{r} r \\
+    &= \alpha
+\end{align*}
+
+where $\lambda$ is a vector of eigvenvalues and
+$\vert \vert \cdot \vert \vert_\text{max}$ is the $\ell^\infty$ norm.
+
+As the model iterates, the matrix transformation of $B$ is repeatedly 
+applied. With $\uv$ and teacher-forced $\dv$ as zeros, the internal state
+has the value $\xv(t_{k+1}) = \tanh(B \xv_k)$ for iteration $k$.
+
+Since the spectral radius of $B$ is less than 1, 
+\begin{align*}
+    \lim_{k \to \infty}B^k \vv_i &= \lim_{k \to \infty} \lambda_i^k \vv_i & \text{ (where $\lambda_i$ and $\vv_i$ is an eigvenvalue-eigenvector pair of $B$)} \\
+    &= 0 \vv_i & \text{ (since $\vert\lambda_i\vert < \alpha < 1$ and $\lim_{k \to \infty}\alpha^k = 0$)} \\
+    &= 0
+\end{align*}
+
+This suggests that as the model iterates, the internal state converges to 
+zero.
+
+The rest of weights can be initialized however desired, so we will use a 
+common technique.
+
+\begin{enumerate}
+    \item Initialize an $N \times M$ matrix, $\W_0$, with values from a 
+    uniform distribution in $[-1, 1]$. $M$ and $N$ here are not the 
+    same values from before for the sake for generality. 
+    \item Scale the matrix by $\frac{1}{\sqrt{M}}$ to calculate the weight matrix.
+\end{enumerate}
+
+Then, $\Win$ and $\Wback$ can be calculated as follows:
+
+\begin{align}
+    \Win &= \frac{\W_0}{\sqrt{K}} \nonumber \\
+    \Wback &= \frac{\W_0}{\sqrt{L}} \nonumber
+\end{align}
+
+Different from most training techniques, $\Win$, $\W$, and $\Wback$ are
+never changed after initialization.
+
+\subsection{Echo State Network Training}
+\label{sec:etrain}
+
+In order to train the echo state network, we need to find good 
+weight values for $\Wout$. Training the echo state network is different
+from the backpropagation approach in that we can solve for
+and calculate directly the weights matrix; more modern methods use
+an iterative approach which converges to good weight values. Part of the
+reason is due to the calculation cost of the iterative methods. Today, that
+it is no longer an issue, but historically, it was a strong quality of
+the echo state network \cite{jaeger2007echo}.
+
+First, the data (input, $\uv$, and output, $\dv$, values) is partitioned into three groups:
+\begin{enumerate}
+    \item Initialization values at time points
+    $t_0, t_1, \dots, t_{T_0-1}$.
+    \item Training values from
+    $t_{T_0}, \dots, t_T$
+    \item Testing values from
+    $t_{T+1}, \dots, t_{T_f}$
+\end{enumerate}
+
+Second, the initialization data is fed into the model. This initializes the
+inner state of the model, and the initial state (zeros) is lost due to the 
+echo state property. $T_0$ should be chosen such that this is truly the 
+case. Like $\alpha$, $T_0$ is a parameter of the echo state network and
+differs depending on the problem. Good values for $T_0$ are 10 to 500 
+depending on the problem complexity.
+
+Third, the training values are fed into the model to sample the network.
+We can store the input unit values, the internal state values, and the 
+desired output values as matrices $M$ and $T$. $M$ will store the input 
+unit values and internal state value pairs
+$(\uv(t_{T_0}), \xv(t_{T_0})), \dots, (\uv(t_T), \xv(t_T))$
+in its rows. $T$ will store the output unit values
+$\dv(t_{T_0}), \dots, \dv(t_T)$.
+
+To train the model, we want $\Wout M$ to approximate accurately
+$g^{-1}(T)$, where $g$ is the activation function for the output layer.
+Since we use an idempotent output layer activation function,
+$g^{-1}(T) = T$.
+
+Therefore, $\Wout$ should be found such that $\Wout M = T$ 
+\cite{jaeger2002tutorial}.
+Solving for $\Wout$,
+
+\begin{align*}
+    \Wout M &= T \\
+    (\Wout M)^T &= T^T & \text{ (where $A^T$ is the transpose of $A$)} \\
+    M^T \Wout^T &= T^T \\
+    (M^T)^{-1} M^T \Wout^T &= (M^T)^{-1} T^T & \text{ (where $A^{-1}$ is the Moore-Penrose pseudoinverse \cite{ben2003generalized} of $A$)} \\
+    \Wout^T &= (M^T)^{-1} T^T \\
+    \Wout &= \left((M^T)^{-1} T^T\right)^T \\
+    \Wout &= T \left((M^T)^{-1}\right)^T
+\end{align*}
+
+Using packages like \texttt{numpy.linalg.eig} and 
+\texttt{numpy.linalg.pinv}, solving for eigenvalues and
+pseudoinverses for $\Wout$ is very 
+easy. After solving for $\Wout$, the echo state network is trained.
+
+To evaluate the network, the testing values are fed into the model. 
+However, this time, the output layer is not teacher-forced since 
+in real application, the output values are unknown. 
+To measure how well the echo state network approximates the desired output
+we define the error to be the root mean squared error (RMSE) of the
+actual output values $\dv$ and
+predicted values $\yv$: $\sqrt{\sum_{i=T+1}^{n} (\dv(t_i) - \yv(t_i))^2}$ 
+where $n \in [T+1 \dots T_f]$. The error represents the predictive power
+of the model for $n$ time steps in the future. If RMSE is low for larger 
+values of $n$, the model has a strong long term predictive power.
+
+%noise: 0.0001 to 0.01 \cite{jaeger2002tutorial}
+
 %\subsection{LTSM}
 
 %%% ANALYSIS %%%
