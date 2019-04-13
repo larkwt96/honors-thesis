@@ -10,10 +10,12 @@ class TestEchoStateNetwork(unittest.TestCase):
         N = 11
         L = 12
         esn = EchoStateNetwork(K, N, L)
+        if esn.bias:
+            bias_K = K + 1
         self.assertEqual(esn.Win.shape, (N, K))
         self.assertEqual(esn.W.shape, (N, N))
         self.assertEqual(esn.Wback.shape, (N, L))
-        self.assertEqual(esn.Wout.shape, (L, K+N))
+        self.assertEqual(esn.Wout.shape, (L, bias_K+N))
 
     # def init_weights(self):
     # test echo state property

@@ -1,3 +1,4 @@
+import itertools
 import os
 import unittest
 from echonn.ml import ESNExperiment
@@ -12,6 +13,7 @@ class TestExperiment(unittest.TestCase):
         self.alpha = [.7, .8]
         self.N = [3]
         self.T0 = [500]
+        self.params = itertools.product(self.alpha, self.N, self.T0)
         self.trials = 2
 
     @unittest.skip
@@ -22,8 +24,7 @@ class TestExperiment(unittest.TestCase):
         if self.verbose:
             print('Testing Lorenz Model')
         experiment = ESNExperiment(
-            LorenzSystem(), self.alpha,
-            self.N, self.T0, self.trials, 1000)
+            LorenzSystem(), self.params, self.trials, 1000)
         res = experiment.run(self.verbose)
         if self.file_io:
             with open(fn, 'wb') as f:
@@ -40,8 +41,7 @@ class TestExperiment(unittest.TestCase):
         if self.verbose:
             print('Testing Double Pendulum Model')
         experiment = ESNExperiment(
-            DoublePendulumSystem(), self.alpha,
-            self.N, self.T0, self.trials, 1000)
+            DoublePendulumSystem(), self.params, self.trials, 1000)
         res = experiment.run(self.verbose)
         if self.file_io:
             with open(fn, 'wb') as f:
@@ -58,8 +58,7 @@ class TestExperiment(unittest.TestCase):
         if self.verbose:
             print('Testing 3 Body Problem Model')
         experiment = ESNExperiment(
-            RestrictedCircular3Body(), self.alpha,
-            self.N, self.T0, self.trials, 1000)
+            RestrictedCircular3Body(), self.params, self.trials, 1000)
         res = experiment.run(self.verbose)
         if self.file_io:
             with open(fn, 'wb') as f:

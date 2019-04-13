@@ -5,7 +5,7 @@ from .time_series_forecaster import TimeSeriesForecaster
 
 
 class EchoStateNetwork(TimeSeriesForecaster):
-    def __init__(self, K, N, L, T0=50, alpha=.8, noise=0.0, f=None, g=None, g_inv=None):
+    def __init__(self, K, N, L, T0=50, alpha=.8, noise=0.0, bias=True, f=None, g=None, g_inv=None):
         """
         K - input units, u
         N - internal units, x (should not exceed Tf/10 to Tf/2 at risk of overfitting
@@ -17,10 +17,13 @@ class EchoStateNetwork(TimeSeriesForecaster):
         during sampling. Uniform distribution ranging from [-noise, noise].
         """
         # TODO: implement bias
+        bias_K = K
+        if bias:
+            bias_K += 1
         self.shapes = [
             (N, K),
             (N, N),
-            (L, K+N),
+            (L, bias_K+N),
             (N, L)
         ]
         self.K = K
@@ -35,6 +38,7 @@ class EchoStateNetwork(TimeSeriesForecaster):
         self.W = None
         self.Wout = None
         self.Wback = None
+        self.bias = bias
         self.f = np.tanh if f is None else f
         if g is None:
             self.g = lambda x: x
@@ -75,7 +79,8 @@ class EchoStateNetwork(TimeSeriesForecaster):
         Win = self.Win
         W = self.W
         Wback = self.Wback
-        u = self.u
+        u = self.u[:, :self.K]
+
         x = self.x
         y = self.y
 
@@ -94,7 +99,10 @@ class EchoStateNetwork(TimeSeriesForecaster):
         Wout = self.Wout
         u = self.u
         x = self.x
-        return g(Wout[:, :self.K]@u[n] + Wout[:, self.K:]@x[n])
+        K = self.K
+        if self.bias:
+            K += 1
+        return g(Wout[:, :K]@u[n] + Wout[:, K:]@x[n])
 
     def score(self, ds, ys, T, Tf=None, T0=None):
         """
@@ -114,6 +122,11 @@ class EchoStateNetwork(TimeSeriesForecaster):
         test_y = ys[T:Tf]
         test_rmse = self.rmse(test_d, test_y)
         return (train_d, train_y, train_rmse), (test_d, test_y, test_rmse)
+
+    def add_bias(self):
+        if self.bias:
+            ones_vec = np.ones((self.u.shape[0], 1))
+            self.u = np.concatenate((self.u, ones_vec), axis=1)
 
     def predict(self, ds=None, us=None, Tf=None):
         """
@@ -153,6 +166,7 @@ class EchoStateNetwork(TimeSeriesForecaster):
             us_new[:us.shape[0]] = us
             us = us_new
         self.u = np.insert(us, 0, 0, axis=0)
+        self.add_bias()
 
         # init x
         self.x = np.zeros((1, self.N))
@@ -196,6 +210,7 @@ class EchoStateNetwork(TimeSeriesForecaster):
         if ds.shape[0] != us.shape[0]:
             raise Exception('ds and us shapes don\'t match')
         self.u = np.insert(us, 0, 0, axis=0)
+        self.add_bias()
         self.y = np.insert(ds, 0, 0, axis=0)
 
         # initialize network state

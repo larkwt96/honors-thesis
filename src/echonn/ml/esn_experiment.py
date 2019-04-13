@@ -8,11 +8,9 @@ import matplotlib.pyplot as plt
 
 
 class ESNExperiment:
-    def __init__(self, model, alpha=None, N=None, T0=None, trials=2, time_steps_per_lce_time=1000):
+    def __init__(self, model, params=None, trials=2, time_steps_per_lce_time=1000):
         self.model = model
-        self.alpha = alpha
-        self.N = N
-        self.T0 = T0
+        self.params = params
         self.trials = trials
         self.time_steps_per_lce_time = time_steps_per_lce_time
 
@@ -74,21 +72,18 @@ class ESNExperiment:
             Run model on testing set and calculate RMSE for every time point
         """
         ts_data = TSData(run=model_run)
-        ts_analysis = TSAnalysis(
-            ts_data, self.alpha, self.N, self.T0, self.trials)
+        ts_analysis = TSAnalysis(ts_data, self.params, self.trials)
         results = ts_analysis.run(self.verbose)
         return ts_data, results
 
 
 class TSAnalysis:
-    def __init__(self, ts_data, alpha=None, N=None, T0=None, trials=2):
+    def __init__(self, ts_data, params, trials=2):
         """
         ts_data is a TSDAta object
         """
         self.ts_data = ts_data
-        self.alpha = alpha
-        self.N = N
-        self.T0 = T0
+        self.params = params
         self.trials = trials
 
     def run_params(self, alpha, N, T0):
@@ -201,10 +196,9 @@ class TSAnalysis:
         std_dev_rmses = []
         if self.verbose:
             self.times = []
-            self.num_pairs = len(
-                list(self.build_param_pairs(self.alpha, self.N, self.T0)))
+            self.num_pairs = len(self.build_param_pairs())
             print('Total Param Pairs:', self.num_pairs)
-        for pair in self.build_param_pairs(self.alpha, self.N, self.T0):
+        for pair in self.build_param_pairs():
             if verbose:
                 self.times.append(time.time())
                 print('Testing Params:', pair)
@@ -260,7 +254,7 @@ class TSAnalysis:
 
         return (bm_train, bm_cv, bm_full_train, bm_test)
 
-    def build_param_pairs(self, alpha=None, N=None, T0=None):
+    def build_param_pairs(self):
         # affects computation
         if alpha is None:
             alpha = [.7, .75, .8, .85, .9, .98]
@@ -277,13 +271,23 @@ class TSAnalysis:
             T0 = [100, 250, 500]
             T0.reverse()
 
-        #alpha_cut = 1
-        #N_cut = 1
-        #T0_cut = 1
+        if self.params is None:
+            self.params = [
+                (.7, 500, 300),
+                (.8, 500, 300),
+                (.98, 500, 300),
+                (.7, 300, 300),
+                (.8, 300, 300),
+                (.98, 300, 300),
+            ]
+
+        # alpha_cut = 1
+        # N_cut = 1
+        # T0_cut = 1
         # return itertools.product(alpha[:alpha_cut], N[:N_cut], T0[:T0_cut])
 
         # complexity = alpha.shape[0] * N.shape[0] * T0.shape[0]
-        return itertools.product(alpha, N, T0)
+        return self.params
 
 
 class TSData:
