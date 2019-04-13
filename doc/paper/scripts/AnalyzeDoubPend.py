@@ -7,7 +7,7 @@ from echonn.ml import ESNExperiment
 fn = os.path.join('.', 'doub_pend_results.p')
 print('Testing Double Pendulum Model')
 experiment = ESNExperiment(DoublePendulumSystem())
-res = experiment.run()
+res = experiment.run(verbose=True)
 with open(fn, 'wb') as f:
     pickle.dump(res, f)
 print(res)
