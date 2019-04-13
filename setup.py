@@ -10,7 +10,7 @@ setup(
     author='Lucas Wilson',
     author_email='lkwilson96@gmail.com',
     url='https://github.com/larkwt96/honors-thesis',
-    install_requires=['numpy', 'pygame', 'torch', 'torchvision', 'matplotlib'],
+    install_requires=['numpy', 'matplotlib', 'scipy'],
     packages=['echonn'],
     package_dir={'echonn': 'src/echonn'},
     include_package_data=True,
