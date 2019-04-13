@@ -12,8 +12,8 @@ class DynamicalSystem(ABC):
     def fun(self, t, v):
         return v
 
-    # TODO get lce T value from empirical results
-    # TODO get random IC
+    def get_rnd_ic(self, **kwargs):
+        return np.random.rand(self.system.dim)
 
     def Dfun(self, t, v):
         ''' This ignores t '''

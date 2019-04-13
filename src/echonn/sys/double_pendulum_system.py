@@ -25,8 +25,13 @@ class DoublePendulumSystem(DynamicalSystem):
         #self._gl = g / l
         #self._moment_pre = -.5*m*l**2
 
-    def lagrange(self, v):
-        pass
+    def get_rnd_ic(self, **kwargs):
+        a1 = (0.5 + np.random.rand())*pi  # []
+        a2 = 2*np.random.rand()*pi  # [0, 2*pi]
+        w1 = np.random.rand() / 100  # [0, .01)
+        w2 = np.random.rand() / 100  # [0, .01)
+        y0 = np.array([a1, a2, w1, w2])
+        return y0
 
     def fun(self, t, v):
         sin = np.sin
@@ -48,7 +53,7 @@ class DoublePendulumSystem(DynamicalSystem):
         w2p = sin(a1 - a2) * w2_num / w2_den
         return a1p, a2p, w1p, w2p
 
-    """ from wikipedia
+    """ formula from wikipedia
     def fun(self, t, v):
         a1, a2, p1, p2 = v
 

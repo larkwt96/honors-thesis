@@ -28,7 +28,7 @@ class EchoStateNetwork(TimeSeriesForecaster):
         self.L = L
         self.T0 = T0  # at T0, x[T0] has stabilized
         self.alpha = alpha
-        self.noise = 0.0001 if noise is None else noise
+        self.noise = noise
         self.w = None
         self.Ws = None
         self.Win = None
@@ -79,7 +79,10 @@ class EchoStateNetwork(TimeSeriesForecaster):
         x = self.x
         y = self.y
 
-        noise = np.random.uniform(-self.noise, self.noise)
+        if self.noise is None:
+            noise = 0
+        else:
+            noise = np.random.uniform(-self.noise, self.noise)
         return f(Win @ u[n] + W @ x[n-1] + Wback @ y[n-1] + noise)
 
     def calc_y(self, n):
@@ -91,9 +94,7 @@ class EchoStateNetwork(TimeSeriesForecaster):
         Wout = self.Wout
         u = self.u
         x = self.x
-
-        system_state = np.concatenate((u[n], x[n]))
-        return g(Wout @ system_state)
+        return g(Wout[:, :self.K]@u[n] + Wout[:, self.K:]@x[n])
 
     def score(self, ds, ys, T, Tf=None, T0=None):
         """
@@ -167,6 +168,8 @@ class EchoStateNetwork(TimeSeriesForecaster):
 
     @staticmethod
     def fill_with_zeros(vs, dim):
+        if isinstance(np.array([1, 2, 3]), np.ndarray):
+            return vs.reshape(vs.shape[0], dim)
         vs = [np.zeros(dim) if v is None else np.array(v) for v in vs]
         return np.array(vs).reshape(len(vs), dim)
 

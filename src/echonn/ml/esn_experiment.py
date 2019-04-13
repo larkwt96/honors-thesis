@@ -3,17 +3,22 @@ import numpy as np
 from ..sys import SystemSolver
 from . import EchoStateNetwork
 import itertools
+import time
+import matplotlib.pyplot as plt
 
 
 class ESNExperiment:
-    def __init__(self, Model, time_steps_per_lce_time=1000):
-        """ Model is the dynamical system to test with """
-        self.ModelClass = Model  # assign the class not initialize it
+    def __init__(self, model, alpha=None, N=None, T0=None, trials=2, time_steps_per_lce_time=1000):
+        self.model = model
+        self.alpha = alpha
+        self.N = N
+        self.T0 = T0
+        self.trials = trials
         self.time_steps_per_lce_time = time_steps_per_lce_time
 
     # TODO: visualization tools?
 
-    def run(self):
+    def run(self, verbose=False):
         """
         build model, extract data and perform analysis
 
@@ -24,9 +29,10 @@ class ESNExperiment:
             data set: ts_data
             param performance: {pair: RMSE vector per each network trial}
         """
+        self.verbose = verbose
         model_run, lce, lce_run = self.build_model()
-        esn, ts_data, param_performance = self.build_esn(model_run)
-        return model_run, (lce, lce_run), ts_data, esn, param_performance
+        ts_data, results = self.build_esn(model_run)
+        return model_run, (lce, lce_run), ts_data, results
 
     def build_model(self):
         """
@@ -38,10 +44,12 @@ class ESNExperiment:
             Calc Step Size is 1 / LCE / 1000 (10,000?)
             Integrate model
         """
-        model = self.ModelClass()
+        if self.verbose:
+            print('Collecting data...')
+        model = self.model
         y0 = model.get_rnd_ic()
         model_solver = SystemSolver(model)
-        lce_T = model.get_best_lce_T()
+        lce_T = model.best_lce_T
         lce, lce_run = model_solver.get_lce(lce_T, y0)
         lce_time = 1 / lce
         Tf = lce_time * 50
@@ -66,13 +74,14 @@ class ESNExperiment:
             Run model on testing set and calculate RMSE for every time point
         """
         ts_data = TSData(run=model_run)
-        ts_analysis = TSAnalysis(ts_data)
-        results = ts_analysis.run()
+        ts_analysis = TSAnalysis(
+            ts_data, self.alpha, self.N, self.T0, self.trials)
+        results = ts_analysis.run(self.verbose)
         return ts_data, results
 
 
 class TSAnalysis:
-    def __init__(self, ts_data, alpha=None, N=None, T0=None, trials=50):
+    def __init__(self, ts_data, alpha=None, N=None, T0=None, trials=2):
         """
         ts_data is a TSDAta object
         """
@@ -90,19 +99,55 @@ class TSAnalysis:
         t_validation, y_validation = self.ts_data.validation
         esns = []
         rmses = []
-        for _ in range(self.trials):
+        param_timer = time.time()
+        for i in range(self.trials):
+            if self.verbose:
+                print('\tRunning Trial {}/{} ... '.format(i+1, self.trials))
+                trial_timer = time.time()
             esn = EchoStateNetwork(K, N, L, T0=T0, alpha=alpha)
             esn.fit(y_train)
-            Tf = t_train.shape[0] + t_validation.shape[0]
-            ys = esn.predict(y_train, Tf)
-            ds = self.ts_data.y[:self.ts_data.cv_index_end]
-            T = t_train.shape[0]
-            (_, _, train_rmse), (_, _, cv_rmse) = esn.score(ds, ys, T=T)
+            T = y_train.shape[0]
+            Tf = T + t_validation.shape[0]
+            # calc train rmse
+            ys_train = esn.predict(y_train[:T0], Tf=T)[T0:]
+            ds_train = y_train[T0:]
+            rmse_train = esn.rmse(ds_train, ys_train)
+
+            ys_cv = esn.predict(y_train, Tf=Tf)[T:]
+            ds_cv = y_validation
+            rmse_cv = esn.rmse(ds_cv, ys_cv)
+
             esns.append(esn)
-            rmses.append((train_rmse, cv_rmse))
+            rmses.append((rmse_train, rmse_cv))
+            if self.verbose:
+                trial_timer = time.time() - trial_timer
+                print('\t\tTrain RMSE: {:.5}'.format(rmse_train))
+                print('\t\tValidation RMSE: {:.5}'.format(rmse_cv))
+                print('\t\tTime: {:.5} s'.format(trial_timer))
         return esns, rmses
 
-    def run(self):
+    def calc_appx_time(self):
+        mean_time = np.mean(self.times)
+        time_left = mean_time * self.num_pairs - np.sum(self.times)
+        time_sign = 's'
+        if time_left > 60:
+            time_left = time_left / 60
+            time_sign = 'm'
+            if time_left > 60:
+                time_left = time_left / 60
+                time_sign = 'h'
+                if time_left > 24:
+                    time_left = time_left / 24
+                    time_sign = 'day'
+                    if time_left > 2:
+                        time_sign += 's'
+                    if time_left > 365.25:
+                        time_left = time_left / 365.25
+                        time_sign = 'YEARS'
+        time_left_str = '{:.3} {}'.format(time_left, time_sign)
+        return '(appx. {} remaining)'.format(time_left_str)
+
+    def run(self, verbose=False):
         """
         Analyze data
             Automate different ESN params and pairs of those params
@@ -148,19 +193,41 @@ class TSAnalysis:
                 'std dev rmse': [ (train, cv), ... ]
             }
         """
+        self.verbose = verbose
         params = []
         best_models = []
         best_model_rmses = []
         avg_rmses = []
         std_dev_rmses = []
-        for pair in self.build_param_pairs():
+        if self.verbose:
+            self.times = []
+            self.num_pairs = len(
+                list(self.build_param_pairs(self.alpha, self.N, self.T0)))
+            print('Total Param Pairs:', self.num_pairs)
+        for pair in self.build_param_pairs(self.alpha, self.N, self.T0):
+            if verbose:
+                self.times.append(time.time())
+                print('Testing Params:', pair)
             esns, rmses = self.run_params(*pair)
             cvs = [rmse[1] for rmse in rmses]  # cv for all models
-            bmi = np.argmax(cvs)  # best model index by cv rmse
+            bmi = np.argmin(cvs)  # best model index by cv rmse
             best_model = esns[bmi]  # get best model
             bm_train, bm_cv = rmses[bmi]  # unpack train rmse and cv rmse
             # get full rmse fector
+            if verbose:
+                print('\tCalculating test rmse of best model...')
             full_rmse = self.get_rmse_vector(best_model, bm_train, bm_cv)
+            if verbose:
+                self.times[-1] = time.time() - self.times[-1]
+                curr_time = 'Total Time: {:.3} s'.format(self.times[-1])
+                appx_time = self.calc_appx_time()
+                train, cv, full, _ = full_rmse
+                test = full_rmse[-1][-1]
+                print('\tTrain RMSE:', train)
+                print('\tCV RMSE:', cv)
+                print('\tFull Train RMSE:', full)
+                print('\tFinal Test RMSE:', test)
+                print('\t{} {}'.format(curr_time, appx_time))
             best_model_rmses.append(full_rmse)
             # get mean train rmse and cv rmse
             avg_rmses.append(np.mean(rmses, axis=1))
@@ -175,30 +242,52 @@ class TSAnalysis:
         }
 
     def get_rmse_vector(self, best_model, bm_train, bm_cv):
-        y = self.ts_data.y[:self.ts_data.cv_index_end]
-        y_train = self.ts_data.full_train_y
-        ys = best_model.fit(y_train)
+        y = self.ts_data.y
+        y_train = self.ts_data.y[:self.ts_data.cv_index_end]
+        T0 = best_model.T0
+        T = y_train.shape[0]
         Tf = y.shape[0]
-        ys = best_model.predict(y_train, Tf=Tf)
-        bm_score = best_model.score(y, ys, y_train.shape[0])  # get rmse
-        (_, _, bm_full_train), (test_d, test_y, _) = bm_score  # unpack
-        bm_test = []
-        for i in range(1, test_d.shape[0]+1):
-            rmse = best_model.rmse(test_d[:i], test_y[:i])
-            bm_test.append(rmse)
+
+        ys_full_train = best_model.predict(y_train[:T0], Tf=T)[T0:]
+        ds_full_train = y_train[T0:]
+        bm_full_train = best_model.rmse(ds_full_train, ys_full_train)
+
+        # calc test rmse vector
+        ys_test = best_model.predict(y_train, Tf=Tf)[T:]
+        ds_test = y[T:]
+        rmse_test = best_model.rmse(ds_test, ys_test)
+        bm_test = (ds_test, ys_test, rmse_test)
+
         return (bm_train, bm_cv, bm_full_train, bm_test)
 
-    def build_param_pairs(self):
+    def build_param_pairs(self, alpha=None, N=None, T0=None):
         # affects computation
-        alpha = np.arange(0.7, 0.98, 0.02, dtype=np.float64)
-        N = np.arange(5, 500, 10, dtype=int)
-        T0 = np.arange(10, 500, 10, dtype=int)
-        #complexity = alpha.shape[0] * N.shape[0] * T0.shape[0]
+        if alpha is None:
+            alpha = [.7, .75, .8, .85, .9, .98]
+            alpha = [.7, .8, .9, .98]
+            alpha.reverse()
+
+        if N is None:
+            N = [10, 25, 50, 100, 200, 300, 500]
+            N = [10, 75, 300, 500]
+            N.reverse()
+
+        if T0 is None:
+            T0 = [10, 100, 200, 300, 500]
+            T0 = [100, 250, 500]
+            T0.reverse()
+
+        #alpha_cut = 1
+        #N_cut = 1
+        #T0_cut = 1
+        # return itertools.product(alpha[:alpha_cut], N[:N_cut], T0[:T0_cut])
+
+        # complexity = alpha.shape[0] * N.shape[0] * T0.shape[0]
         return itertools.product(alpha, N, T0)
 
 
 class TSData:
-    def __init__(self, data=None, run=None, split=0.9):
+    def __init__(self, data=None, run=None, split=0.7):
         """
         data - is a tuple of t and y of the following format:
             t[time point]

@@ -1,4 +1,6 @@
 from .system import DynamicalSystem
+from .system_solver import SystemSolver
+import numpy as np
 
 
 class LorenzSystem(DynamicalSystem):
@@ -7,6 +9,15 @@ class LorenzSystem(DynamicalSystem):
         self.sigma = sigma
         self.rho = rho
         self.beta = beta
+
+    def get_rnd_ic(self, **kwargs):
+        T = 30
+        y0 = np.random.rand(self.dim)
+        slvr = SystemSolver(self)
+        run = slvr.run([0, T], y0, **kwargs)
+        # tend it towards the attractor
+        y0 = run['results'].y[:, -1]
+        return y0
 
     def fun(self, t, v):
         x, y, z = v
