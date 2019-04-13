@@ -256,20 +256,20 @@ class TSAnalysis:
 
     def build_param_pairs(self):
         # affects computation
-        if alpha is None:
-            alpha = [.7, .75, .8, .85, .9, .98]
-            alpha = [.7, .8, .9, .98]
-            alpha.reverse()
+        # if alpha is None:
+            #alpha = [.7, .75, .8, .85, .9, .98]
+            #alpha = [.7, .8, .9, .98]
+            # alpha.reverse()
 
-        if N is None:
-            N = [10, 25, 50, 100, 200, 300, 500]
-            N = [10, 75, 300, 500]
-            N.reverse()
+        # if N is None:
+            #N = [10, 25, 50, 100, 200, 300, 500]
+            #N = [10, 75, 300, 500]
+            # N.reverse()
 
-        if T0 is None:
-            T0 = [10, 100, 200, 300, 500]
-            T0 = [100, 250, 500]
-            T0.reverse()
+        # if T0 is None:
+            #T0 = [10, 100, 200, 300, 500]
+            #T0 = [100, 250, 500]
+            # T0.reverse()
 
         if self.params is None:
             self.params = [
@@ -280,6 +280,8 @@ class TSAnalysis:
                 (.8, 300, 300),
                 (.98, 300, 300),
             ]
+        else:
+            self.params = list(self.params)
 
         # alpha_cut = 1
         # N_cut = 1
