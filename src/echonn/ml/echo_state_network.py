@@ -40,14 +40,6 @@ class EchoStateNetwork(TimeSeriesForecaster):
         self.Wback = None
         self.bias = bias
         self.f = np.tanh if f is None else f
-        if g is None:
-            self.g = lambda x: x
-            self.g_inv = self.g
-        else:
-            self.g = g
-            if g_inv is None:
-                raise Exception('g_inv must be specified with g')
-            self.g_inv = g_inv
 
         # set on train
         self.n = 0
@@ -56,6 +48,12 @@ class EchoStateNetwork(TimeSeriesForecaster):
         self.u = [np.zeros(self.K)]
         self.x = [np.zeros(self.N)]
         self.y = [np.zeros(self.L)]
+
+    def g(self, x):
+        return x
+
+    def g_inv(self, x):
+        return x
 
     def init_weights(self):
         self.w, self.Ws = init_weights(self.shapes)

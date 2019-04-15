@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 
 
 class ESNExperiment:
-    def __init__(self, model, params=None, trials=2, time_steps_per_lce_time=1000):
+    def __init__(self, model, data=None, params=None, trials=2, time_steps_per_lce_time=100):
         self.model = model
+        self.data = data
         self.params = params
         self.trials = trials
         self.time_steps_per_lce_time = time_steps_per_lce_time
@@ -23,12 +24,21 @@ class ESNExperiment:
         Return
             system integration results: run
             LCE results: (lce, run)
-            trained model: esn
             data set: ts_data
-            param performance: {pair: RMSE vector per each network trial}
+            param performance results:
+                {
+                    'params': [ param pairs, ... ]
+                    'best model': [ best model for param (based on cv), ... ]
+                    'best model rmse': [ (train, cv, full_train, test), ... ]
+                    'avg rmse': [ (train, cv), ... ]
+                    'std dev rmse': [ (train, cv), ... ]
+                }
         """
         self.verbose = verbose
-        model_run, lce, lce_run = self.build_model()
+        if self.data is None:
+            model_run, lce, lce_run = self.build_model()
+        else:
+            model_run, lce, lce_run = self.data
         ts_data, results = self.build_esn(model_run)
         return model_run, (lce, lce_run), ts_data, results
 
@@ -94,7 +104,6 @@ class TSAnalysis:
         t_validation, y_validation = self.ts_data.validation
         esns = []
         rmses = []
-        param_timer = time.time()
         for i in range(self.trials):
             if self.verbose:
                 print('\tRunning Trial {}/{} ... '.format(i+1, self.trials))
@@ -183,22 +192,22 @@ class TSAnalysis:
             {
                 'params': [ param pairs, ... ]
                 'best model': [ best model for param (based on cv), ... ]
-                'best model rmse': [ (train, cv, full_train, test), ... ]
+                'best model rmse': [ (train, cv, full_train, (ds_test, ys_test, rmse_test)), ... ]
                 'avg rmse': [ (train, cv), ... ]
                 'std dev rmse': [ (train, cv), ... ]
             }
         """
         self.verbose = verbose
-        params = []
+        params = self.build_param_pairs()
         best_models = []
         best_model_rmses = []
         avg_rmses = []
         std_dev_rmses = []
         if self.verbose:
             self.times = []
-            self.num_pairs = len(self.build_param_pairs())
+            self.num_pairs = len(params)
             print('Total Param Pairs:', self.num_pairs)
-        for pair in self.build_param_pairs():
+        for pair in params:
             if verbose:
                 self.times.append(time.time())
                 print('Testing Params:', pair)
@@ -222,6 +231,7 @@ class TSAnalysis:
                 print('\tFull Train RMSE:', full)
                 print('\tFinal Test RMSE:', test)
                 print('\t{} {}'.format(curr_time, appx_time))
+            best_models.append(best_model)
             best_model_rmses.append(full_rmse)
             # get mean train rmse and cv rmse
             avg_rmses.append(np.mean(rmses, axis=1))
@@ -229,7 +239,7 @@ class TSAnalysis:
             std_dev_rmses.append(np.std(rmses, axis=1))
         return {
             'params': params,
-            'best model': best_models,
+            'best model': [],  # best_models,
             'best model rmse': best_model_rmses,
             'avg rmse': avg_rmses,
             'std dev rmse': std_dev_rmses,
@@ -273,12 +283,10 @@ class TSAnalysis:
 
         if self.params is None:
             self.params = [
-                (.7, 500, 300),
-                (.8, 500, 300),
-                (.98, 500, 300),
-                (.7, 300, 300),
-                (.8, 300, 300),
-                (.98, 300, 300),
+                (.7, 150, 300),
+                (.8, 150, 300),
+                (.9, 150, 300),
+                (.98, 150, 300),
             ]
         else:
             self.params = list(self.params)
