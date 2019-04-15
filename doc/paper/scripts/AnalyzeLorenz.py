@@ -7,6 +7,10 @@ from echonn.ml import ESNExperiment
 fn = os.path.join('.', 'lorenz_results.p')
 print('Testing Lorenz Model')
 params = [
+    (.7, 500, 300),
+    (.8, 500, 300),
+    (.9, 500, 300),
+    (.98, 500, 300),
     (.7, 300, 300),
     (.8, 300, 300),
     (.9, 300, 300),
