@@ -1,4 +1,7 @@
 from echonn.ml import EchoStateNetwork
+import itertools
+from echonn.ml import ESNExperiment
+from echonn.sys import LorenzSystem
 import numpy as np
 import unittest
 
@@ -193,5 +196,23 @@ class TestEchoStateNetwork(unittest.TestCase):
                 return
         raise Exception('noise paper experiment failed')
 
+    @unittest.skip
     def testBiasWorks(self):
-        pass  # TODO enable bias in esn
+        class Run:
+            def __init__(self, t, y):
+                self.t = t
+                self.y = y
+        lce = 1
+        t = np.arange(0, 50, 1/100, dtype=np.float64)
+        y = np.array([np.sin(t), np.cos(t), np.tanh(t)])
+        run = {'results': Run(t, y)}
+        data = (run, lce, None)
+        ESNExperiment
+        alphas = [.7, .75, .8, .85]
+        Ns = [10, 20, 30, 40]
+        T0s = [50, 100, 150]
+        params = list(itertools.product(alphas, Ns, T0s))
+        experiment = ESNExperiment(
+            LorenzSystem(), data=data, params=params, trials=3)
+        res = experiment.run(verbose=True)
+        print(res)

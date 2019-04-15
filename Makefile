@@ -9,7 +9,7 @@ test:
 	python3 -m unittest discover -s src
 
 install:
-	python3 -m pip install . --user
+	python3 -m pip install . --user --upgrade
 
 install_updatable:
 	python3 -m pip install git+git://github.com/larkwt96/honors-thesis.git

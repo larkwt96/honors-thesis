@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 
 
 class ESNExperiment:
-    def __init__(self, model, data=None, params=None, trials=2, time_steps_per_lce_time=100):
+    def __init__(self, model, data=None, params=None, trials=2, t_len=50, time_steps_per_lce_time=100):
         self.model = model
+        self.t_len = t_len
         self.data = data
         self.params = params
         self.trials = trials
@@ -60,7 +61,7 @@ class ESNExperiment:
         lce_T = model.best_lce_T
         lce, lce_run = model_solver.get_lce(lce_T, y0)
         lce_time = 1 / lce
-        Tf = lce_time * 50
+        Tf = lce_time * self.t_len
         time_step = lce_time / self.time_steps_per_lce_time
         T_range = np.arange(0, Tf, time_step)
         model_run = model_solver.run([0, Tf], y0,
@@ -314,7 +315,8 @@ class TSData:
             data = res.t, res.y.T
         self.run = run
         self.t, self.y = data
-        self.y = self.y
+        self.t = self.t[:-1]
+        self.y = self.y[:-1] - self.y[1:]
         self.N, self.dim = self.y.shape
         self.test_index = int(self.N * split)
         self.cv_index_end = self.test_index
