@@ -1038,7 +1038,8 @@ Lastly, $\text{RMSE}_\text{test}$ will notate the RMSE for the entire test
 set.
 
 We will look at how far past $T_f$ the ESN model's
-$\text{RMSE}_\text{test}$ grows too large.
+$\text{RMSE}_\text{test}$ grows too large. The best model will be the 
+model with the lowest Testing RMSE for the longest time.
 
 \subsection{Results}
 \subsubsection{Lorenz}
@@ -1052,15 +1053,176 @@ values of 16 or well above 10,000, implying the model diverged.
 
 To fix this issue, we instead have the ESN train on differences between
 time points. This reduces our data set to 4,999 values, and it creates
-a new shape of the data. The Lorenz Butterfly had a similar shape, two rings, but they intersected differently (See figure \ref{fig:lorenz_diff}).
+a new shape of the data. The Lorenz Butterfly had a similar shape, two rings, but in this case, the rings intersect (See figure \ref{fig:lorenz_diff}).
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.5\linewidth]{images/lorenz/test.png}
-    \caption{Largest Lyapunov Characteristic Exponent vs Inner Theta Initial Condition}
+    \includegraphics[width=.5\linewidth]{doc/paper/images/lorenz/full_differential.png}
+    \caption{A plot of the differences between time steps of an approximation of the Lorenz Butterfly}
     \label{fig:lorenz_diff}
 \end{figure}
 
+After this transformation of the data, the model performed significantly
+better. $\text{RMSE}_\text{test}$ dropped to ranges of 1-2, the
+model exploded (diverged to infinity) less frequently, and it was no
+longer outputting previous values.
+
+Most well performing models couldn't predict past one Lyapunov constant. 
+From the graphs, we can see that most models deviated once reaching the
+intersection of the butterfly wings.
+
+Once reaching the intersection,
+several things can happen. First, it can deviate completely and stop
+following either wings. Second, it can follow the wrong wing. Which wing
+the trajectory follows seems almost random, so it makes sense if it
+chooses the wrong one. Third, it will continue to follow the trajectory,
+but slightly perturbed. With every passing of the intersection, any of
+these can happen. Eventually, even the perturbations causes problems. 
+The model was trained on data that existed in a specific range of space. 
+When the perturbations lead the model into space not explored, 
+it performs even worse, and this can cause very sporastic behavior.
+
+The chaotic behavior of the Lorenz model dictates which wing the
+trajectory will follow. This is difficult for the ESN to be able to
+model. However, it is possible that I am not using enough data to train
+the ESN, and due to resource limitations, I may have not been able to find
+the correct parameters to achieve a more perfect performance.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_0_param_225_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r0_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_0_param_225_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r0_rmse}
+    \end{subfigure}
+    \caption{The model diverges when entering never seen region.}
+    \label{fig:lorenz_r0}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_1_param_230_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r1_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_1_param_230_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r1_rmse}
+    \end{subfigure}
+    \caption{The model continues in wrong direction after intersection.}
+    \label{fig:lorenz_r1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_2_param_458_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r2_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_2_param_458_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r2_rmse}
+    \end{subfigure}
+    \caption{The model has completely deviated after an intersection.}
+    \label{fig:lorenz_r2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_3_param_151_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r3_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_3_param_151_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r3_rmse}
+    \end{subfigure}
+    \caption{Fits model really well, but follows wrong wings.}
+    \label{fig:lorenz_r3}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_4_param_300_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r4_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_4_param_300_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r4_rmse}
+    \end{subfigure}
+    \caption{Fits model really well, but follows wrong wings.}
+    \label{fig:lorenz_r4}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_5_param_387_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r5_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_5_param_387_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r5_rmse}
+    \end{subfigure}
+    \caption{Diverges after reaching unknown space.}
+    \label{fig:lorenz_r5}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_6_param_222_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r6_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_6_param_222_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r6_rmse}
+    \end{subfigure}
+    \caption{Doesn't fit model smoothy and eventually diverges.}
+    \label{fig:lorenz_r6}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_7_param_73_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r7_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_7_param_73_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r7_rmse}
+    \end{subfigure}
+    \caption{Sporadic behavior shown long after divergence.}
+    \label{fig:lorenz_r7}
+\end{figure}
 
 \subsubsection{Double Pendulum}
 \subsubsection{Restricted Circular 3 Body}
