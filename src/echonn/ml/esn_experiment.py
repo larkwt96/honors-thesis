@@ -302,7 +302,7 @@ class TSAnalysis:
 
 
 class TSData:
-    def __init__(self, data=None, run=None, split=0.7):
+    def __init__(self, data=None, run=None, split=0.9):
         """
         data - is a tuple of t and y of the following format:
             t[time point]
@@ -314,9 +314,9 @@ class TSData:
             res = run['results']
             data = res.t, res.y.T
         self.run = run
-        self.t, self.y = data
-        self.t = self.t[:-1]
-        self.y = self.y[:-1] - self.y[1:]
+        self.t_orig, self.y_orig = data
+        self.t = self.t_orig[:-1]
+        self.y = self.y_orig[:-1] - self.y_orig[1:]
         self.N, self.dim = self.y.shape
         self.test_index = int(self.N * split)
         self.cv_index_end = self.test_index
