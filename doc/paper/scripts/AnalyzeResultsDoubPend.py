@@ -29,11 +29,6 @@ for rmse_res in results['best model rmse']:
         if err > .05:
             score.append(sub)
             break
-    for sub in range(ds_test.shape[0]):
-        err = rmse(ds_test[:sub+1], ys_test[:sub+1])
-        if err > 1:
-            higher_score.append(sub)
-            break
 dir_pre = os.path.join('..', 'images', 'doub_pend')
 slvr = SystemSolver(run['system'])
 runt = deepcopy(run)
@@ -43,8 +38,12 @@ fig = slvr.plotnd(runt)
 plt.savefig(os.path.join(dir_pre, 'full_differential.png'))
 # plt.show(True)
 
+runt['results'].t = ts_data.test_t
+runt['results'].y = ds_test.T
+slvr.plotnd(runt)
+plt.savefig(os.path.join(dir_pre, 'test_data.png'))
 sorter = np.flip(np.argsort(score))
-how_many = 10
+how_many = 5
 for rank, i in enumerate(sorter[:how_many]):
     ds_test, ys_test, total_rmse = results['best model rmse'][i][3]
     print(i, total_rmse, results['params'][i])
@@ -63,19 +62,8 @@ for rank, i in enumerate(sorter[:how_many]):
     plt.close()
 
     runt['results'].t = ts_data.test_t
-    runt['results'].y = ds_test.T
-
-    fig = slvr.plotnd(runt)
-    runt['results'].t = ts_data.test_t[:score[i]]
-    runt['results'].y = ys_test[:score[i]].T
-    slvr.plotnd(runt, fig)
-    runt['results'].t = ts_data.test_t[score[i]:higher_score[i]]
-    runt['results'].y = ys_test[score[i]:higher_score[i]].T
-    slvr.plotnd(runt, fig)
-    plt.legend(['actual', 'approximated', 'deviation'])
-    plt.title('Model Approximation\nParam {} ; RMSE {}'.format(
-        results['params'][i], total_rmse))
-    plt.tight_layout()
+    runt['results'].y = ys_test.T
+    slvr.plotnd(runt)
     name = 'rank_{}_param_{}_fit.png'.format(rank, i)
     plt.savefig(os.path.join(
         dir_pre, name))
