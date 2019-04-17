@@ -54,7 +54,7 @@ for rank, i in enumerate(sorter[:how_many]):
     plt.figure()
     plt.title('RMSE vs Lyapunov Time\nParam {} ; RMSE {}'.format(
         results['params'][i], total_rmse))
-    t_adj = (ts_data.test_t - ts_data.test_t[0]) / lce[0]
+    t_adj = (ts_data.test_t - ts_data.test_t[0]) * lce[0]
     plt.plot(t_adj, rmse_over_t, 'o-')
     plt.plot(t_adj, np.zeros_like(t_adj))
     name = 'rank_{}_param_{}_rmse.png'.format(rank, i)
@@ -63,7 +63,7 @@ for rank, i in enumerate(sorter[:how_many]):
 
     runt['results'].t = ts_data.test_t
     runt['results'].y = ys_test.T
-    slvr.plotnd(runt)
+    slvr.plotnd(runt, dims=['θ1', 'θ2', 'ω1', 'ω2'])
     name = 'rank_{}_param_{}_fit.png'.format(rank, i)
     plt.savefig(os.path.join(
         dir_pre, name))

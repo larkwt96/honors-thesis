@@ -54,7 +54,7 @@ for rank, i in enumerate(sorter[:how_many]):
     plt.figure()
     plt.title('RMSE vs Lyapunov Time\nParam {} ; RMSE {}'.format(
         results['params'][i], total_rmse))
-    t_adj = (ts_data.test_t - ts_data.test_t[0]) / lce[0]
+    t_adj = (ts_data.test_t - ts_data.test_t[0]) * lce[0]
     plt.plot(t_adj, rmse_over_t, 'o-')
     plt.plot(t_adj, np.zeros_like(t_adj))
     name = 'rank_{}_param_{}_rmse.png'.format(rank, i)
