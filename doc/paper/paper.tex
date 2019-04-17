@@ -1215,38 +1215,36 @@ to achieve a better performance.
 
 \subsubsection{Double Pendulum}
 
-The double pendulum's initial condition was 
+The double pendulum's initial condition was
 
 \begin{equation}
 (\theta_1, \theta_2, \omega_1, \omega_2) 
 = (4.66648088, 4.29820501,
 8.01585663 \times 10^{-4}, 3.71175422 \times 10^{-3}).
 \end{equation}
-In this case, we
-need $\theta_1$ large enough that the system is chaotic, but the rest of
-the parameters were chosen randomly (with rotational velocities close to
-zero). The resulting Lyapunov Exponent is $0.60074$. 
-Like the Lorenz, the differences between time points
-were used to train the ESN since the ESN was showing poor results
-otherwise. As the pendulum kept looping the center, $\theta_1$ and 
-$\theta_2$ kept growing; this shouldn't be an issue, but using
-the differences keeps the system variables in a closer range.
 
-Figure \ref{fig:doub_pend_diff} shows a plot of each
-of the dataset's dimensions. It seems like the dataset's activity is
-fairly sparse. There is only gradual but seemingly random variations until
-a few spots around $t=10, 30, 60, \text{and} 75$.
-The results for the ESN weren't very strong, but it was able to predict
-almost two Lyapunov Times before diverging. 
+In this case, we need $\theta_1$ large enough that the system is chaotic, but
+the rest of the parameters were chosen randomly (with rotational velocities
+close to zero). The resulting Lyapunov Exponent is $0.60074$. Like the
+Lorenz, the differences between time points were used to train the ESN since
+the ESN was showing poor results otherwise. As the pendulum kept looping the
+center, $\theta_1$ and $\theta_2$ kept growing; this shouldn't be an issue,
+but using the differences keeps the system variables in a closer range.
 
-Because there are portions of the dataset which are calm, the ESN then has
-to pickup on signals which lead to the spikes in movement.
-We see the testing graph that while it predicts the testing set well,
-it eventually tries to predict spikes but does so at the wrong time,
-and the spike pattern never ends, has too large of magnitude, and is very 
-rapid. Overall the model performs poorly, and it's reflected in the RMSE.
-The likely reason for this is that the ESN can't learn the complex
-patterns from such a small and sparse dataset.
+Figure \ref{fig:doub_pend_diff} shows a plot of each of the dataset's
+dimensions. It seems like the dataset's activity is fairly sparse. There is
+only gradual but seemingly random variations until a few spots around $t=10,
+30, 60, \text{and} 75$. The results for the ESN weren't very strong, but it
+was able to predict almost two Lyapunov Times before diverging.
+
+Because there are portions of the dataset which are calm, the ESN then has to
+pickup on signals which lead to the spikes in movement. We see the testing
+graph that while it predicts the testing set well, it eventually tries to
+predict spikes but does so at the wrong time, and the spike pattern never
+ends, has too large of magnitude, and is very rapid. Overall the model
+performs poorly, and it's reflected in the RMSE. The likely reason for this
+is that the ESN can't learn the complex patterns from such a small and sparse
+dataset.
 
 \begin{figure}[H]
     \centering
