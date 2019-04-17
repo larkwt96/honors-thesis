@@ -91,7 +91,7 @@ he shows one of his calculations having about 3000 iterations, which must
 have taken around 50 minutes. Given the amount of time it takes to perform
 the calculation, it's tempting to continue the calculation from the output of
 the previous calculation. However, the story of the discover is that while
-the computer used 6 digit accuracy, it output only 3 digits, so when the
+the computer used 6 digit accuracy, it only output 3 digits, so when the
 simulation was continued by Lorenz with the less accurate measurements, he
 found the results to be very different \cite{oestreicher2007history}.
 
@@ -132,6 +132,7 @@ the predictability of a model.
 
 \subsection{Calculating the Largest Lyapunov Characteristic Exponent}
 
+\label{sec:calc_lya}
 In order to find the Lyapunov time, we only need to solve for the largest
 LCE. To find this, we will use the following method detailed in
 \cite{viswanath1998lyapunov}.
@@ -518,10 +519,11 @@ be solved by using a symplectic integrator \cite{chambers1999hybrid}.
 \end{figure}
 
 While it is possible to use a symplectic integrator, it is not necessary.
-Under the right initial conditions, the third body will diverge regardless.
-The simple divergent spiral isn't chaotic, so instead orbital and collision
-less initial conditions will be used. Without divergence and without
-collisions, the symplectic integrator is unnecessary.
+Under the right initial conditions, the third body can diverge regardless
+(fast initial velocity away from the bodies). The simple divergent spiral
+isn't chaotic, so instead orbital and collision less initial conditions
+will be used. Without divergence and without collisions, the symplectic
+integrator is unnecessary. 
 
 \subsection{Double Pendulum}
 
@@ -726,7 +728,8 @@ $\Win$, $\W$, and $\Wback$. The activation function for the internal
 layer is $\tanh$.
 
 The output layer is connected to the current input layer and current 
-internal layer. The weight for these connections will be denoted $\Wout$ 
+internal layer. Additionally, a bias input is connected to this layer.
+The weight for these connections will be denoted $\Wout$ 
 (we only have one matrix since the connected layers are concatenated into a
 single vector, per Jaeger's notation \cite{jaeger2002tutorial}). The 
 activation function for these connections is linear. Although, the 
@@ -742,7 +745,7 @@ In mathematical notation, the model is defined as follows:
             + \W \xv(t_{i-1})
             + \Wback \yv(t_{i-1})
         \right) \\
-    \yv(t_i) &= \Wout (\uv(t_i), \xv(t_i))_{\text{concat}}.
+    \yv(t_i) &= \Wout (\uv(t_i), 1, \xv(t_i))_{\text{concat}}.
 \end{align}
 
 $\xv$ and $\yv$ are calculated from previous unit values but for the 
@@ -923,7 +926,7 @@ Third, the training values are fed into the model to sample the network.
 We can store the input unit values, the internal state values, and the 
 desired output values as matrices $M$ and $T$. $M$ will store the input 
 unit values and internal state value pairs
-$(\uv(t_{T_0}), \xv(t_{T_0})), \dots, (\uv(t_T), \xv(t_T))$
+$(\uv(t_{T_0}), 1, \xv(t_{T_0})), \dots, (\uv(t_T), 1, \xv(t_T))$
 in its rows. $T$ will store the output unit values
 $\dv(t_{T_0}), \dots, \dv(t_T)$.
 
@@ -970,7 +973,259 @@ values of $n$, the model has a strong long term predictive power.
 \section{Analysis}
 
 \subsection{Method}
+
+First, data from the models is collected. Using the process described
+above (Section \ref{sec:calc_lya}), the Largest Lyapunov Exponent is
+calculated, $\lambda_1$. Then, the Lyapunov Time is calculated by
+$\frac{1}{\lambda_1}$. We will then integrate the model with an algorithm
+called RK4(5) over the interval
+$[0, \frac{50}{\lambda_1}]$ with time steps of $\frac{1}{100 \lambda_1}$. 
+This will result in 5,000 data points.
+
+Then, the data is partitioned into a training set, a validation set, and 
+a testing set. I use a 90\% split, so testing is the last 10\% of the
+data. The training and validation set are the first 90\%. Of the 90\%,
+training is the first 90\%, and validation is the final 10\%. In total,
+it's a 81\%-9\%-10\% split. 
+
+The training set is used to train the model. The validation
+set is used to tune the parameters of the model ($\alpha, N, T_0$). The
+testing set is used to evaluate the performance.
+
+The first data point of the training set is $t_0 = 0$. The parameter
+$T_0$ marks where the model begins training on the data (see Section
+\ref{sec:etrain}). Using slightly different notation to account for the
+extra validation set, we will denote the first validation time point by
+$t = T$. We will denote the first testing time point by $t = T_f$
+
+Performance of the model is calculated by RMSE for a given time interval
+$[t_0, t_f]$:
+
+\begin{align}
+    \text{RMSE} = \sqrt{\sum^{t_f}_{t=t_0} (\dv(t) - \yv(t))^2}
+\end{align}
+
+where $(\cdot)^2$ is the dot product of the error with itself,
+$\dv(t)$ is the true value at time $t$,
+and $\yv(t)$ is the model's approximation at time $t$.
+
+First, we generate a list of parameter combinations to try. Usually, this
+is the Cartesian product of typical parameter values for the model. 
+For each combination, we train several models on the training data. Then,
+we predict the validation data to measure the general performance of the
+model under those parameters.
+
+$\text{RMSE}_\text{train}$ is calculated on the interval $[T_0, T)$,
+and the prediction uses teacher-forced values on $[0, T_0)$.
+$\text{RMSE}_\text{validation}$ is calculated on the interval $[T, T_f)$,
+and the prediction uses teacher-forced values on $[0, T)$.
+
+Then, the models which performed best on the validation set should also
+perform well on the testing set. The models are retrained on the testing
+and validation set, and the error is calculated:
+$\text{RMSE}_\text{full train}$ is calculated on the interval $[T, T_f)$,
+and the prediction uses teacher-forced values on $[0, T)$.
+
+Finally, the error for the testing set is calculated. 
+The performance on the testing set is 
+an unbias representation of how well the ESN can fit the model.
+
+However, the $\text{RMSE}_\text{test}$ is calculated slightly different
+since we want to know how far the model can predict before deviating too
+far. The $\text{RMSE}_\text{test}(t_f)$ will be calculated on the interval
+$[T_f, t_f)$ and the prediction uses teacher-forced values on $[0, T_f)$.
+Lastly, $\text{RMSE}_\text{test}$ will notate the RMSE for the entire test
+set.
+
+We will look at how far past $T_f$ the ESN model's
+$\text{RMSE}_\text{test}$ grows too large. The best model will be the 
+model with the lowest Testing RMSE for the longest time.
+
 \subsection{Results}
+\subsubsection{Lorenz}
+
+One of the issues run into while forecasting with the Lorenz is that the
+continuous nature of the equation led to the ESN just outputing the
+previous value. For initial values far from the center of the Lorenz
+Butterfly, it would tend towards the center and stop when it does arrive
+there. Most models trained poorly and gave $\text{RMSE}_\text{test}$
+values of 16 or well above 10,000, implying the model diverged.
+
+To fix this issue, we instead have the ESN train on differences between
+time points. This reduces our data set to 4,999 values, and it creates
+a new shape of the data. The Lorenz Butterfly had a similar shape, two rings, but in this case, the rings intersect (See figure \ref{fig:lorenz_diff}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.5\linewidth]{doc/paper/images/lorenz/full_differential.png}
+    \caption{A plot of the differences between time steps of an approximation of the Lorenz Butterfly}
+    \label{fig:lorenz_diff}
+\end{figure}
+
+After this transformation of the data, the model performed significantly
+better. $\text{RMSE}_\text{test}$ dropped to ranges of 1-2, the
+model exploded (diverged to infinity) less frequently, and it was no
+longer outputting previous values.
+
+Most well performing models couldn't predict past one Lyapunov constant. 
+From the graphs, we can see that most models deviated once reaching the
+intersection of the butterfly wings.
+
+Once reaching the intersection,
+several things can happen. First, it can deviate completely and stop
+following either wings. Second, it can follow the wrong wing. Which wing
+the trajectory follows seems almost random, so it makes sense if it
+chooses the wrong one. Third, it will continue to follow the trajectory,
+but slightly perturbed. With every passing of the intersection, any of
+these can happen. Eventually, even the perturbations causes problems. 
+The model was trained on data that existed in a specific range of space. 
+When the perturbations lead the model into space not explored, 
+it performs even worse, and this can cause very sporastic behavior.
+
+The chaotic behavior of the Lorenz model dictates which wing the
+trajectory will follow. This is difficult for the ESN to be able to
+model. However, it is possible that I am not using enough data to train
+the ESN, and due to resource limitations, I may have not been able to find
+the correct parameters to achieve a more perfect performance.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_0_param_225_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r0_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_0_param_225_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r0_rmse}
+    \end{subfigure}
+    \caption{The model diverges when entering never seen region.}
+    \label{fig:lorenz_r0}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_1_param_230_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r1_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_1_param_230_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r1_rmse}
+    \end{subfigure}
+    \caption{The model continues in wrong direction after intersection.}
+    \label{fig:lorenz_r1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_2_param_458_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r2_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_2_param_458_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r2_rmse}
+    \end{subfigure}
+    \caption{The model has completely deviated after an intersection.}
+    \label{fig:lorenz_r2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_3_param_151_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r3_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_3_param_151_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r3_rmse}
+    \end{subfigure}
+    \caption{Fits model really well, but follows wrong wings.}
+    \label{fig:lorenz_r3}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_4_param_300_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r4_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_4_param_300_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r4_rmse}
+    \end{subfigure}
+    \caption{Fits model really well, but follows wrong wings.}
+    \label{fig:lorenz_r4}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_5_param_387_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r5_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_5_param_387_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r5_rmse}
+    \end{subfigure}
+    \caption{Diverges after reaching unknown space.}
+    \label{fig:lorenz_r5}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_6_param_222_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r6_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_6_param_222_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r6_rmse}
+    \end{subfigure}
+    \caption{Doesn't fit model smoothy and eventually diverges.}
+    \label{fig:lorenz_r6}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_7_param_73_fit.png}
+        \caption{The True Figure vs ESN Prediction}
+        \label{fig:lorenz_r7_fit}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_7_param_73_rmse.png}
+        \caption{RMSE Over Time}
+        \label{fig:lorenz_r7_rmse}
+    \end{subfigure}
+    \caption{Sporadic behavior shown long after divergence.}
+    \label{fig:lorenz_r7}
+\end{figure}
+
+\subsubsection{Double Pendulum}
+\subsubsection{Restricted Circular 3 Body}
 
 %% CONCLUSION %%%
 \section{Conclusion}
