@@ -79,35 +79,3 @@ for rank, i in enumerate(sorter[:how_many]):
         dir_pre, name))
     plt.close()
     # plt.show(True)
-
-
-def plot_one(ind):
-    ds_test, ys_test, total_rmse = results['best model rmse'][ind][3]
-    plt.show(True)
-
-
-def plot_res():
-    for i, rmse in enumerate(results['best model rmse']):
-        test_rmse = rmse[3]
-        ds_test, ys_test, total_rmse = test_rmse
-
-        rerr = np.mean((ys_test - ds_test) / ds_test, axis=1)
-        rerr = np.sqrt(rerr**2)
-
-        plt.figure()
-        plt.title('Param Config {} RMSE: {}'.format(
-            results['params'][i], total_rmse))
-        plt.plot((ts_data.test_t - ts_data.test_t[0]) / lce[0], rerr)
-
-        slvr = SystemSolver(run['system'])
-        runt = deepcopy(run)
-        runt['results'].t = ts_data.test_t
-        runt['results'].y = ds_test.T
-        slvr.plotnd(runt)
-        runt['results'].t = ts_data.test_t
-        runt['results'].y = ys_test.T
-        slvr.plotnd(runt)
-        slvr.plot3d(runt)
-        plt.title('Param Config {} RMSE: {}'.format(
-            results['params'][i], total_rmse))
-        plt.show(True)
