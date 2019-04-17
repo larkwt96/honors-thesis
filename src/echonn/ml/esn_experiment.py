@@ -8,10 +8,11 @@ import matplotlib.pyplot as plt
 
 
 class ESNExperiment:
-    def __init__(self, model, data=None, params=None, trials=2, t_len=50, time_steps_per_lce_time=100):
+    def __init__(self, model, data=None, params=None, use_diff=True, trials=2, t_len=50, time_steps_per_lce_time=100):
         self.model = model
         self.t_len = t_len
         self.data = data
+        self.use_diff = use_diff
         self.params = params
         self.trials = trials
         self.time_steps_per_lce_time = time_steps_per_lce_time
@@ -82,7 +83,7 @@ class ESNExperiment:
             Use model with best performance, retrain on train and cv
             Run model on testing set and calculate RMSE for every time point
         """
-        ts_data = TSData(run=model_run)
+        ts_data = TSData(run=model_run, use_diff=self.use_diff)
         ts_analysis = TSAnalysis(ts_data, self.params, self.trials)
         results = ts_analysis.run(self.verbose)
         return ts_data, results
@@ -302,7 +303,7 @@ class TSAnalysis:
 
 
 class TSData:
-    def __init__(self, data=None, run=None, split=0.9):
+    def __init__(self, data=None, run=None, use_diff=True, split=0.9):
         """
         data - is a tuple of t and y of the following format:
             t[time point]
@@ -315,8 +316,12 @@ class TSData:
             data = res.t, res.y.T
         self.run = run
         self.t_orig, self.y_orig = data
-        self.t = self.t_orig[:-1]
-        self.y = self.y_orig[:-1] - self.y_orig[1:]
+        if use_diff:
+            self.t = self.t_orig[:-1]
+            self.y = self.y_orig[:-1] - self.y_orig[1:]
+        else:
+            self.t = self.t_orig
+            self.y = self.y_orig
         self.N, self.dim = self.y.shape
         self.test_index = int(self.N * split)
         self.cv_index_end = self.test_index
