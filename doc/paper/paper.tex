@@ -1044,6 +1044,9 @@ model with the lowest Testing RMSE for the longest time.
 \subsection{Results}
 \subsubsection{Lorenz}
 
+To integrate the model, I use the initial conditions:
+$(x_0, y_0, z_0) = (-13.78990503, -11.6069343, 36.17332518)$. The calculated Lyapunov value was $0.9348566$. 
+
 One of the issues run into while forecasting with the Lorenz is that the
 continuous nature of the equation led to the ESN just outputing the
 previous value. For initial values far from the center of the Lorenz
@@ -1086,7 +1089,7 @@ The chaotic behavior of the Lorenz model dictates which wing the
 trajectory will follow. This is difficult for the ESN to be able to
 model. However, it is possible that I am not using enough data to train
 the ESN, and due to resource limitations, I may have not been able to find
-the correct parameters to achieve a more perfect performance.
+the correct parameters to achieve a better performance.
 
 \begin{figure}[H]
     \centering
@@ -1225,6 +1228,9 @@ the correct parameters to achieve a more perfect performance.
 \end{figure}
 
 \subsubsection{Double Pendulum}
+
+
+
 \subsubsection{Restricted Circular 3 Body}
 
 %% CONCLUSION %%%
