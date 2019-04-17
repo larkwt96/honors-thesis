@@ -1229,7 +1229,122 @@ the correct parameters to achieve a better performance.
 
 \subsubsection{Double Pendulum}
 
+The double pendulum's initial condition was 
 
+\begin{equation}
+(\theta_1, \theta_2, \omega_1, \omega_2) 
+= (4.66648088, 4.29820501,
+8.01585663 \times 10^{-4}, 3.71175422 \times 10^{-3}).
+\end{equation}
+In this case, we
+need $\theta_1$ large enough that the system is chaotic, but the rest of
+the parameters were chosen randomly (with rotational velocities close to
+zero). The resulting Lyapunov Exponent is $0.60074$. 
+Like the Lorenz, the differences between time points
+were used to train the ESN since the ESN was showing poor results
+otherwise. As the pendulum kept looping the center, $\theta_1$ and 
+$\theta_2$ kept growing; this shouldn't be an issue, but using
+the differences keeps the system variables in a closer range.
+
+Figure \ref{fig:doub_pend_diff} shows a plot of each
+of the dataset's dimensions. It seems like the dataset's activity is
+fairly sparse. There is only gradual but seemingly random variations until
+a few spots around $t=10, 30, 60, \text{and} 75$.
+The results for the ESN weren't very strong, but it was able to predict
+almost two Lyapunov Times before diverging. 
+
+Because there are portions of the dataset which are calm, the ESN then has
+to pickup on signals which lead to the spikes in movement.
+We see the testing graph that while it predicts the testing set well,
+it eventually tries to predict spikes but does so at the wrong time,
+and the spike pattern never ends, has too large of magnitude, and is very 
+rapid. Overall the model performs poorly, and it's reflected in the RMSE.
+The likely reason for this is that the ESN can't learn the complex
+patterns from such a small and sparse dataset.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.5\linewidth]{doc/paper/images/doub_pend/full_differential.png}
+    \caption{The entire difference dataset}
+    \label{fig:doub_pend_diff}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.5\linewidth]{doc/paper/images/doub_pend/test_data.png}
+    \caption{The testing dataset partition}
+    \label{fig:doub_pend_testing}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/doub_pend/rank_0_param_77_fit.png}
+        \caption{Delayed spike prediction}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_0_param_225_rmse.png}
+        \caption{RMSE Over Time}
+    \end{subfigure}
+    \caption{Poor forecast of double pendulum}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/doub_pend/rank_1_param_63_fit.png}
+        \caption{Delayed spike prediction}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_1_param_230_rmse.png}
+        \caption{RMSE Over Time}
+    \end{subfigure}
+    \caption{Poor forecast of double pendulum}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/doub_pend/rank_2_param_305_fit.png}
+        \caption{Delayed spike prediction}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_2_param_458_rmse.png}
+        \caption{RMSE Over Time}
+    \end{subfigure}
+    \caption{Poor forecast of double pendulum}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/doub_pend/rank_3_param_52_fit.png}
+        \caption{Delayed spike prediction}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_3_param_151_rmse.png}
+        \caption{RMSE Over Time}
+    \end{subfigure}
+    \caption{Poor forecast of double pendulum}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/doub_pend/rank_4_param_127_fit.png}
+        \caption{Delayed spike prediction}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_4_param_300_rmse.png}
+        \caption{RMSE Over Time}
+    \end{subfigure}
+    \caption{Poor forecast of double pendulum}
+\end{figure}
 
 \subsubsection{Restricted Circular 3 Body}
 
