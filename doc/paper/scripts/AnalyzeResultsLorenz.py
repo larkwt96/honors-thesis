@@ -9,6 +9,8 @@ from echonn.sys import SystemSolver
 res = pickle.load(open('lorenz_results.p', 'rb'))
 run, lce, ts_data, results = res
 
+print('lce:', lce[0])
+print(run['results'].y[:, 0])
 test_rmse = [rmse for _, _, _, (_, _, rmse) in results['best model rmse']]
 test_rmse = np.array(test_rmse)
 
