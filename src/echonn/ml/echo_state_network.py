@@ -30,6 +30,8 @@ class EchoStateNetwork(TimeSeriesForecaster):
         self.L = L
         self.T0 = T0  # at T0, x[T0] has stabilized
         self.alpha = alpha
+        if noise is None:
+            noise = 0
         self.noise = noise
         self.w = None
         self.Ws = None
