@@ -25,7 +25,7 @@ sys = RestrictedCircular3Body(search=True, body_ratio=0.5, max_tries=200,
 y0 = None
 y0 = y0s[-1]
 experiment = ESNExperiment(sys, y0=y0, params=params, use_diff=False,
-                           t_len=50, trials=3,
+                           t_len=50, trials=3, tsttrn_split=.7,
                            time_steps_per_lce_time=100)
 res = experiment.run(verbose=True)
 y0 = res[0]['results'].y[:, 0]

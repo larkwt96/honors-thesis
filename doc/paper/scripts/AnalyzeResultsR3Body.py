@@ -9,17 +9,14 @@ from echonn.sys import SystemSolver
 res = pickle.load(open('rc3_body_results.p', 'rb'))
 run, lce, ts_data, results = res
 
+# print small details
 print('lce:', lce[0])
 print('ic:', run['results'].y[:, 0])
 print('tf:', run['results'].t[-1])
-test_rmse = [rmse for _, _, _, (_, _, rmse) in results['best model rmse']]
-test_rmse = np.array(test_rmse)
 
-
-#fn_y0s = os.path.join('.', 'rc3_body_y0s.p')
-#y0s = [run['results'].y[:, 0]]
-# with open(fn_y0s, 'wb') as f:
-#pickle.dump(y0s, f)
+rank_metric = np.array([test_rmse for _, cv_rmse, _, (_, _, test_rmse)
+                        in results['best model rmse']])
+ranking = np.argsort(rank_metric)
 
 
 def rmse(d, y):
@@ -27,32 +24,29 @@ def rmse(d, y):
     return np.sqrt(np.sum((d-y)**2) / num_samples)
 
 
-score = []
-higher_score = []
-for rmse_res in results['best model rmse']:
-    ds_test, ys_test, total_rmse = rmse_res[3]
-    for sub in range(ds_test.shape[0]):
-        err = rmse(ds_test[:sub+1], ys_test[:sub+1])
-        if err > .05:
-            score.append(sub)
-            break
+# get img dir
 dir_pre = os.path.join('..', 'images', 'r3body')
+
+# extract system and build solver
 sys = run['system']
 slvr = SystemSolver(sys)
+
+# draw full data
 runt = deepcopy(run)
 runt['results'].y = run['results'].y[[0, 2], :]
 slvr.plot2d(runt)
 plt.scatter([-sys.alpha, sys.mu], [0, 0])
-plt.show(True)
 plt.savefig(os.path.join(dir_pre, 'full_differential.png'))
 
+# draw test data
 runt['results'].t = ts_data.test_t
-runt['results'].y = ds_test[:, :2].T
+runt['results'].y = ts_data.test_y[:, [0, 2]].T
 slvr.plot2d(runt)
+plt.scatter([-sys.alpha, sys.mu], [0, 0])
 plt.savefig(os.path.join(dir_pre, 'test_data.png'))
-sorter = np.flip(np.argsort(score))
-how_many = 5
-for rank, i in enumerate(sorter[:how_many]):
+
+how_many = 10
+for rank, i in enumerate(ranking[:how_many]):
     ds_test, ys_test, total_rmse = results['best model rmse'][i][3]
     print(i, total_rmse, results['params'][i])
 
@@ -70,8 +64,9 @@ for rank, i in enumerate(sorter[:how_many]):
     plt.close()
 
     runt['results'].t = ts_data.test_t
-    runt['results'].y = ys_test.T
-    slvr.plotnd(runt, dims=['θ1', 'θ2', 'ω1', 'ω2'])
+    runt['results'].y = ys_test[:, [0, 2]].T
+    slvr.plot2d(runt)
+    plt.scatter([-sys.alpha, sys.mu], [0, 0])
     name = 'rank_{}_param_{}_fit.png'.format(rank, i)
     plt.savefig(os.path.join(
         dir_pre, name))
