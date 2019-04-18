@@ -13,7 +13,7 @@ class DynamicalSystem(ABC):
         return v
 
     def get_rnd_ic(self, **kwargs):
-        return np.random.rand(self.system.dim)
+        return np.random.rand(self.dim)
 
     def Dfun(self, t, v):
         ''' This ignores t '''
