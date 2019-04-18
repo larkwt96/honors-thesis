@@ -5,7 +5,7 @@ from .time_series_forecaster import TimeSeriesForecaster
 
 
 class EchoStateNetwork(TimeSeriesForecaster):
-    def __init__(self, K, N, L, T0=50, alpha=.8, noise=0.0, bias=True, f=None, g=None, g_inv=None):
+    def __init__(self, K, N, L, T0=50, alpha=.8, noise=0, bias=True, f=None, g=None, g_inv=None):
         """
         K - input units, u
         N - internal units, x (should not exceed Tf/10 to Tf/2 at risk of overfitting
@@ -16,7 +16,6 @@ class EchoStateNetwork(TimeSeriesForecaster):
         Specifies whether the algorithm should feed noise into the model
         during sampling. Uniform distribution ranging from [-noise, noise].
         """
-        # TODO: implement bias
         bias_K = K
         if bias:
             bias_K += 1
@@ -82,7 +81,7 @@ class EchoStateNetwork(TimeSeriesForecaster):
         x = self.x
         y = self.y
 
-        if self.noise is None:
+        if self.noise == 0:
             noise = 0
         else:
             noise = np.random.uniform(-self.noise, self.noise)

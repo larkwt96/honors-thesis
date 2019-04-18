@@ -145,6 +145,8 @@ class TestEchoStateNetwork(unittest.TestCase):
         return np.mean((x - y)**2)
 
     def runPaperExperiment(self, noise=0):
+        if noise is None:
+            noise = 0
         esn = EchoStateNetwork(0, 20, 1, T0=100, g=np.tanh,
                                g_inv=np.arctanh, alpha=.99, noise=noise)
         n = np.arange(1, 351)

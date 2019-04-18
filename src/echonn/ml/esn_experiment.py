@@ -8,11 +8,12 @@ import matplotlib.pyplot as plt
 
 
 class ESNExperiment:
-    def __init__(self, model, y0=None, data=None, params=None, use_diff=True, trials=2, t_len=50, time_steps_per_lce_time=100):
+    def __init__(self, model, y0=None, data=None, params=None, tsttrn_split=0.9, use_diff=True, trials=2, t_len=50, time_steps_per_lce_time=100):
         self.y0 = y0
         self.model = model
         self.t_len = t_len
         self.data = data
+        self.tsttrn_split = tsttrn_split
         self.use_diff = use_diff
         self.params = params
         self.trials = trials
@@ -87,7 +88,8 @@ class ESNExperiment:
             Use model with best performance, retrain on train and cv
             Run model on testing set and calculate RMSE for every time point
         """
-        ts_data = TSData(run=model_run, use_diff=self.use_diff)
+        ts_data = TSData(run=model_run, use_diff=self.use_diff,
+                         split=self.tsttrn_split)
         ts_analysis = TSAnalysis(ts_data, self.params, self.trials)
         results = ts_analysis.run(self.verbose)
         return ts_data, results
