@@ -1057,8 +1057,8 @@ better. $\text{RMSE}_\text{test}$ dropped to ranges of 1-2, the model
 exploded (diverged to infinity) less frequently, and it was no longer
 outputting previous values.
 
-Most well performing models couldn't predict past one Lyapunov constant. From
-the graphs, we can see that most models deviated once reaching the
+Most well performing models could predict around one Lyapunov time constant. 
+From the graphs, we can see that most models deviated once reaching the
 intersection of the butterfly wings.
 
 Once reaching the intersection, several things can happen. First, it can
@@ -1332,6 +1332,25 @@ dataset.
 
 \subsubsection{Restricted Circular 3 Body}
 
+Generating data for the 3 body problem was more difficult since we have to becareful that the trajectory doesn't diverge or collide with the other bodies. 
+
+When the bodies collide, then the problem becomes a stiff problem and the
+trajectory might be inaccurate, and when the bodies diverge, the trajectory
+becomes a simple spiral without chaotic properties. Initial conditions which
+don't run into these issues are usually orbital. Such solutions exist
+\cite{frnkacase}, and \texttt{echonn} finds them by randomly generating initial
+conditions, and testing for the conditions. Orbital patterns happen frequently
+enough that they can be found easily with this method. 
+
+The case I analyze, the initial conditions were found to be 
+$(x, x', y, y')_{t=0} = (0.79563053, 0, 0, 0.96833226)$
+with a largest Lyapunov Exponent of 0.1759. This case is much different than 
+the other systems since it doesn't have strong chaotic properties. This can
+be seen in the orbital pattern which seems quasi-periodic, and it might be. 
+In light of this, it's also very possible that the measured chaotic properties
+are solely due to error in the numerical calculation. However, the orbiting
+doesn't repeat exactly, so there are still small complexities for the ESN
+to pick up on. 
 %% CONCLUSION %%%
 \section{Conclusion}
 
