@@ -43,7 +43,7 @@ fig = slvr.plot3d(runt)
 plt.savefig(os.path.join(dir_pre, 'full_differential.png'))
 
 sorter = np.flip(np.argsort(score))
-how_many = 10
+how_many = 8
 for rank, i in enumerate(sorter[:how_many]):
     ds_test, ys_test, total_rmse = results['best model rmse'][i][3]
     print(i, total_rmse, results['params'][i])
@@ -52,8 +52,7 @@ for rank, i in enumerate(sorter[:how_many]):
                    for sub in range(ds_test.shape[0])]
 
     plt.figure()
-    plt.title('RMSE vs Lyapunov Time\nParam {} ; RMSE {}'.format(
-        results['params'][i], total_rmse))
+    plt.title('Test RMSE vs Lyapunov Time')
     t_adj = (ts_data.test_t - ts_data.test_t[0]) * lce[0]
     plt.plot(t_adj, rmse_over_t, 'o-')
     plt.plot(t_adj, np.zeros_like(t_adj))
@@ -71,8 +70,9 @@ for rank, i in enumerate(sorter[:how_many]):
     runt['results'].y = ys_test[score[i]:higher_score[i]].T
     slvr.plot3d(runt, fig)
     plt.legend(['actual', 'approximated', 'deviation'])
-    plt.title('Model Approximation\nParam {} ; RMSE {}'.format(
-        results['params'][i], total_rmse))
+    title = 'ESN Trajectory\nParam {}\nTest RMSE {:.4}'
+    param_title = '(α:{}, N:{}, T0:{})'.format(*results['params'][i])
+    plt.title(title.format(param_title, total_rmse))
     plt.tight_layout()
     name = 'rank_{}_param_{}_fit.png'.format(rank, i)
     plt.savefig(os.path.join(

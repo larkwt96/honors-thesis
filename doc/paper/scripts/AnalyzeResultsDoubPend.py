@@ -34,13 +34,13 @@ slvr = SystemSolver(run['system'])
 runt = deepcopy(run)
 runt['results'].t = ts_data.t
 runt['results'].y = ts_data.y.T
-fig = slvr.plotnd(runt)
+fig = slvr.plotnd(runt, dims=['θ1', 'θ2', 'ω1', 'ω2'], overlay=False)
 plt.savefig(os.path.join(dir_pre, 'full_differential.png'))
 # plt.show(True)
 
 runt['results'].t = ts_data.test_t
 runt['results'].y = ds_test.T
-slvr.plotnd(runt)
+slvr.plotnd(runt, dims=['θ1', 'θ2', 'ω1', 'ω2'], overlay=False)
 plt.savefig(os.path.join(dir_pre, 'test_data.png'))
 sorter = np.flip(np.argsort(score))
 how_many = 5
@@ -52,8 +52,7 @@ for rank, i in enumerate(sorter[:how_many]):
                    for sub in range(ds_test.shape[0])]
 
     plt.figure()
-    plt.title('RMSE vs Lyapunov Time\nParam {} ; RMSE {}'.format(
-        results['params'][i], total_rmse))
+    plt.title('Test RMSE vs Lyapunov Time')
     t_adj = (ts_data.test_t - ts_data.test_t[0]) * lce[0]
     plt.plot(t_adj, rmse_over_t, 'o-')
     plt.plot(t_adj, np.zeros_like(t_adj))
@@ -63,7 +62,11 @@ for rank, i in enumerate(sorter[:how_many]):
 
     runt['results'].t = ts_data.test_t
     runt['results'].y = ys_test.T
-    slvr.plotnd(runt, dims=['θ1', 'θ2', 'ω1', 'ω2'])
+    title = 'ESN Trajectory | Param {} | Test RMSE {:.4}'
+    param_title = '(α:{}, N:{}, T0:{})'.format(*results['params'][i])
+    title = title.format(param_title, total_rmse)
+    slvr.plotnd(runt, dims=['θ1', 'θ2', 'ω1', 'ω2'],
+                title=title, overlay=False)
     name = 'rank_{}_param_{}_fit.png'.format(rank, i)
     plt.savefig(os.path.join(
         dir_pre, name))

@@ -174,7 +174,7 @@ class SystemSolver:
         plt.tight_layout()
         return fig
 
-    def plotnd(self, run=None, fig=None, figsize=None, legend=False, dims=None):
+    def plotnd(self, run=None, fig=None, figsize=None, legend=False, dims=None, overlay=True, title=None):
         """ warning legend=True is going to mess up the layout. The legend can be seen by the side of the mini graph. """
         run = self.get_last_run(run)
         sys_num = run['index']
@@ -182,7 +182,9 @@ class SystemSolver:
 
         if fig is None:
             max_rows = 8
-            num_plots = res.y.shape[0] + 1  # +1 for the overlay
+            num_plots = res.y.shape[0]
+            if overlay:
+                num_plots += 1
             rows = min(max_rows, num_plots)
             cols = max(1, math.ceil(num_plots/max_rows))
             if num_plots > max_rows:
@@ -193,8 +195,9 @@ class SystemSolver:
         else:
             fig = plt.figure(fig.number)
         plots = fig.get_axes()
-        overlay = plots[-1]
-        overlay.set_ylabel('overlay')
+        if overlay:
+            overlay_plt = plots[-1]
+            overlay_plt.set_ylabel('overlay')
         for i, y in enumerate(res.y):
             for _ in range(i+1):
                 plots[i].plot(res.t, y)  # TODO: fix this hack
@@ -204,8 +207,13 @@ class SystemSolver:
             else:
                 plots[i].set_ylabel(dims[i])
             label = 'sys {} dim {}'.format(sys_num, i)
-            overlay.plot(res.t, y, label=label)
-        if legend:
+            if overlay:
+                overlay_plt.plot(res.t, y, label=label)
+        if legend and overlay:
             overlay.legend()
-        plt.tight_layout()
+        if title is not None:
+            fig.suptitle(title)
+            fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+        else:
+            plt.tight_layout()
         return fig
