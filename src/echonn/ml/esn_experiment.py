@@ -57,7 +57,7 @@ class ESNExperiment:
         if self.verbose:
             print('Collecting data...')
         model = self.model
-        y0 = model.get_rnd_ic()
+        y0 = model.get_rnd_ic(verbose=self.verbose)
         model_solver = SystemSolver(model)
         lce_T = model.best_lce_T
         lce, lce_run = model_solver.get_lce(lce_T, y0)
