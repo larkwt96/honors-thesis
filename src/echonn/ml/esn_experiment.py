@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 
 
 class ESNExperiment:
-    def __init__(self, model, data=None, params=None, use_diff=True, trials=2, t_len=50, time_steps_per_lce_time=100):
+    def __init__(self, model, y0=None, data=None, params=None, use_diff=True, trials=2, t_len=50, time_steps_per_lce_time=100):
+        self.y0 = y0
         self.model = model
         self.t_len = t_len
         self.data = data
@@ -57,7 +58,10 @@ class ESNExperiment:
         if self.verbose:
             print('Collecting data...')
         model = self.model
-        y0 = model.get_rnd_ic(verbose=self.verbose)
+        if self.y0 is None:
+            y0 = model.get_rnd_ic(verbose=self.verbose)
+        else:
+            y0 = self.y0
         model_solver = SystemSolver(model)
         lce_T = model.best_lce_T
         lce, lce_run = model_solver.get_lce(lce_T, y0)
