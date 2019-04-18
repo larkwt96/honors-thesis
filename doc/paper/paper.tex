@@ -1234,8 +1234,8 @@ but using the differences keeps the system variables in a closer range.
 Figure \ref{fig:doub_pend_diff} shows a plot of each of the dataset's
 dimensions. It seems like the dataset's activity is fairly sparse. There is
 only gradual but seemingly random variations until a few spots around $t=10,
-30, 60, \text{and} 75$. The results for the ESN weren't very strong, but it
-was able to predict almost two Lyapunov Times before diverging.
+30, 60, \text{and} 75$. The results for the ESN weren't very strong, and none 
+could predict more than one Lyapunov Times before diverging.
 
 Because there are portions of the dataset which are calm, the ESN then has to
 pickup on signals which lead to the spikes in movement. We see the testing
@@ -1268,7 +1268,7 @@ dataset.
     \end{subfigure}
     ~
     \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_0_param_225_rmse.png}
+        \includegraphics[width=\textwidth]{doc/paper/images/doub_pend/rank_0_param_77_rmse.png}
         \caption{RMSE Over Time}
     \end{subfigure}
     \caption{Poor forecast of double pendulum}
@@ -1282,7 +1282,7 @@ dataset.
     \end{subfigure}
     ~
     \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_1_param_230_rmse.png}
+        \includegraphics[width=\textwidth]{doc/paper/images/doub_pend/rank_2_param_305_rmse.png}
         \caption{RMSE Over Time}
     \end{subfigure}
     \caption{Poor forecast of double pendulum}
@@ -1296,7 +1296,7 @@ dataset.
     \end{subfigure}
     ~
     \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_2_param_458_rmse.png}
+        \includegraphics[width=\textwidth]{doc/paper/images/doub_pend/rank_2_param_305_rmse.png}
         \caption{RMSE Over Time}
     \end{subfigure}
     \caption{Poor forecast of double pendulum}
@@ -1310,7 +1310,7 @@ dataset.
     \end{subfigure}
     ~
     \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_3_param_151_rmse.png}
+        \includegraphics[width=\textwidth]{doc/paper/images/doub_pend/rank_3_param_52_rmse.png}
         \caption{RMSE Over Time}
     \end{subfigure}
     \caption{Poor forecast of double pendulum}
@@ -1324,7 +1324,7 @@ dataset.
     \end{subfigure}
     ~
     \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/rank_4_param_300_rmse.png}
+        \includegraphics[width=\textwidth]{doc/paper/images/doub_pend/rank_4_param_127_rmse.png}
         \caption{RMSE Over Time}
     \end{subfigure}
     \caption{Poor forecast of double pendulum}
@@ -1350,7 +1350,104 @@ be seen in the orbital pattern which seems quasi-periodic, and it might be.
 In light of this, it's also very possible that the measured chaotic properties
 are solely due to error in the numerical calculation. However, the orbiting
 doesn't repeat exactly, so there are still small complexities for the ESN
-to pick up on. 
+to pick up on. In the results, we see that the ESN performs very well, but
+it's possible that the ESN is just converging to the mean of the orbits. 
+The steep increase in error and the subsequent slowing of increase in error
+seen in the graphs below suggests that this might be the case.
+Since the orbits are fairly close, this results in a sufficiently
+accurate approximation.
+
+Most RMSE graphs look very similar. There is a steep increase in RMSE at first
+but then it slows. Overall, the RMSE is really strong. Most don't rise above 
+0.2, and one show below (Figure \ref{fig:3brounded}) shows an RMSE not rising 
+above 0.1 despite its not as elliptical looking shape. Further, this model
+is impressive because it only has 5 internal units. Most other top performers 
+have over 100.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.5\linewidth]{doc/paper/images/r3body/full_differential.png}
+    \caption{The entire difference dataset}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.5\linewidth]{doc/paper/images/r3body/test_data.png}
+    \caption{The testing dataset partition}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/r3body/rank_3_param_15_fit.png}
+        \caption{Predicted Trajectory}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/r3body/rank_3_param_15_rmse.png}
+        \caption{RMSE Over Time}
+    \end{subfigure}
+    \caption{The best validation and testing performance and only 5 internal units}
+    \label{fig:3brounded}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/r3body/rank_0_param_566_fit.png}
+        \caption{Predicted Trajectory}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/r3body/rank_0_param_566_rmse.png}
+        \caption{RMSE Over Time}
+    \end{subfigure}
+    \caption{Best performer on validation set}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/r3body/rank_1_param_366_fit.png}
+        \caption{Predicted Trajectory}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/r3body/rank_1_param_366_rmse.png}
+        \caption{RMSE Over Time}
+    \end{subfigure}
+    \caption{A top performer on validation set}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/r3body/rank_2_param_262_fit.png}
+        \caption{Predicted Trajectory}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/r3body/rank_2_param_262_rmse.png}
+        \caption{RMSE Over Time}
+    \end{subfigure}
+    \caption{A top performer on validation set}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/r3body/rank_4_param_448_fit.png}
+        \caption{Predicted Trajectory}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/r3body/rank_4_param_448_rmse.png}
+        \caption{RMSE Over Time}
+    \end{subfigure}
+    \caption{A top performer on validation set}
+\end{figure}
+
+
 %% CONCLUSION %%%
 \section{Conclusion}
 
