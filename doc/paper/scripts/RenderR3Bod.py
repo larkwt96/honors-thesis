@@ -11,7 +11,7 @@ if __name__ == "__main__":
     init = np.array(1000*np.random.rand(4), dtype=int)/1000
     slv = SystemSolver(sys)
     #run = slv.run([0, 10], init, max_step=0.001)
-    T = 50
+    T = 100
     lce, run = slv.get_lce(T=T, y0=init)
     #lce, run = slv.get_lce(T=T)
     mat = run['results'].y[4:, -1].reshape(4, 4)

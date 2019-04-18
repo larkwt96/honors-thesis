@@ -35,10 +35,10 @@ class RestrictedCircular3Body(DynamicalSystem):
             if tries > max_tries:
                 raise Exception('Too many failed tries')
             y0 = np.random.rand(self.dim)
-            #y0[0] = 1
+            y0[0] = .5 + y0[0]/2
             y0[1] = 0
             y0[2] = 0
-            #y0[3] = 1
+            y0[3] = .5 + y0[3]/2
             run = slvr.run([0, T], y0, **kwargs)
             t = run['results'].t
             y = run['results'].y
