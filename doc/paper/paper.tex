@@ -20,6 +20,7 @@
 % the paper.
 
 \newcommand{\echonn}{\texttt{echonn}}
+\newcommand{\echonnsp}{\texttt{echonn}\text{ }}
 \newcommand{\der}[2][t]{\frac{\mathrm{d}#2}{\mathrm{d}#1}}
 
 \title{Time Series Analysis of Chaotic Dynamical Systems with Recurrent Neural Networks}
@@ -90,7 +91,7 @@ have taken around 50 minutes. Given the amount of time it takes to perform
 the calculation, it's tempting to continue the calculation from the output of
 the previous calculation. However, the story of the discover is that while
 the computer used 6 digit accuracy, it only output 3 digits, so when the
-simulation was continued by Lorenz with the less accurate measurements, he
+simulation was continued with the less accurate measurements, Lorenz
 found the results to be very different \cite{oestreicher2007history}.
 
 Chaos can appear in many different situations. Lorenz's paper demonstrates
@@ -105,14 +106,14 @@ different fields.
 
 \subsection{Lyapunov Constant}
 
-In terms of forecasting, it's useful to know how chaotic a dynamical system
-is. Chaos will be measured by the exponential rate at which nearby
+It's useful to know how chaotic a dynamical system
+is. Chaos is usually measured by the exponential rate at which nearby
 trajectories diverge. Constants describing the divergence are known as the
-Lyapunov Characteristic Exponents (LCEs) \cite{sandri1996numerical}. There is
-an LCE for each dimension, and since they all represent exponential growth.
-The error growing at the rate of the largest LCE will dominate over the
+Lyapunov Characteristic Exponents (LCEs) \cite{sandri1996numerical}.
+There is
+an LCE for each dimension, and since they all represent exponential growth,
+the error growing at the rate of the largest LCE will dominate over the 
 others.
-
 Given a small perturbation $\epsilon$ to a dynamical system in the direction
 of the largest LCE, we can approximate the growth of the perturbation by the
 equation $\epsilon(\Delta t) = \epsilon_0 e^{\lambda \Delta t}$ where
@@ -121,18 +122,24 @@ zero, then the error doesn't grow exponentially, and thus, there is no chaos.
 Error created from smaller LCEs is negligible. The approximate time scale
 where perturbations become large is going to be proportional to $1 /
 \lambda$. This is known as the Lyapunov time \cite{bezruchko2010extracting}.
-For our solar system, the Lyapunov time is 10,000,000 years
-\cite{oestreicher2007history}. Researchers have used it to evaluate the
-effectiveness of forecasting models on chaotic problems
-\cite{pathak2018model}. Predicting the solution of a chaotic model over an
+For example, the Lyapunov time of the orbits of our solar system is
+10,000,000 years
+\cite{oestreicher2007history}.
+
+Researchers have used it to evaluate the
+effectiveness of forecasting models on chaotic problems in the past.
+Predicting the solution of a chaotic model over an
 interval of time which is multiple times the size of the Lyapunov time shows
-the predictability of a model.
+the predictability of a model. One group of researchers studied the 
+Kuramoto-Sivashinsky chaotic model near an attractor and found that with a max
+LCE of 0.1, they were able to predict 8 Lyapunov times before their forecast 
+diverged \cite{pathak2018model}.
 
 \subsection{Calculating the Largest Lyapunov Characteristic Exponent}
 \label{sec:calc_lya}
 
 In order to find the Lyapunov time, we only need to solve for the largest
-LCE. To find this, we will use the following method detailed in
+LCE. To find this, we will use the following method
 \cite{viswanath1998lyapunov}.
 
 \newcommand{\xv}{\mathbf{x}}
@@ -160,8 +167,10 @@ integrate the matrix differential equation:
     \label{eq:lce_mat_diffeq}
 \end{equation}
 
-where $\Mv(t) \in \mathbb{R}^{d \times d}$ and $\frac{\partial \fv}{\partial
-\xv}$ is the $d \times d$ Jacobian matrix of $\fv(\xv)$ at $\xv(t)$.
+where $\Mv(t) \in \mathbb{R}^{d \times d}$ and
+$\frac{\partial \fv}{\partial \xv}$
+is the $d \times d$ Jacobian matrix of $\fv(\xv)$ at $\xv(t)$ and with 
+$\Mv(0)$ equal to the identity matrix.
 
 Since values for $\xv(t)$ are needed as well, the systems will be integrated
 together. If the dynamical system has dimensions $d$, then the new system of
@@ -182,7 +191,7 @@ various parameters and initial conditions. The LCEs match the expected values
 very accurately (see the Lorenz System section: \ref{sec:lorenz}). The 3
 dimensional 3-body problem is an 18 dimensional dynamical system, so while
 the dynamical system is implemented in \echonn, its max LCE can't be
-calculated accurately since the resultant system has 342 dimensions. The
+calculated accurately since the resulting system has 342 dimensions. The
 algorithm was also tested on the differential equation which produces a
 circle:
 
@@ -222,7 +231,7 @@ The error doesn't grow at all over time, so the LCE should be less than or
 equal to zero as the system is not chaotic. The algorithm reports an LCE of
 $-1.15954 \times 10^{-06}$ as expected.
 
-Empirically shown, \echonn can be used to identify the max LCE of smaller
+Empirically shown, \echonnsp can be used to identify the max LCE of smaller
 dynamical systems, and special precaution has to be taken when choosing a
 time interval. Using a larger time will yield a more accurate $\lambda_1$,
 but it may also cause an overflow if the system is chaotic. Thus, maximum
@@ -247,7 +256,7 @@ In order to generate the data to be analyized, the solutions to these
 dynamical systems need to be computed. Each of the systems are defined by a
 system of differential equations which can be numerically solved. However,
 due to the chaotic nature, error introduced by the numerical solution will
-grow exponentially, so precaution need to be taken to avoid having this sort
+grow exponentially, so precaution needs to be taken to avoid having this sort
 of error introduced into the collected data. When numerically solving chaotic
 problems, it's possible for the chaotic behavior to be suppressed, or where
 there shouldn't be chaotic behavior, it could be created
@@ -292,8 +301,8 @@ $\rho=28$ \cite{lorenz1963deterministic}, and it has a maximum LCE of
 $0.90566$ \cite{viswanath1998lyapunov}. There are other parameters which
 produce chaotic results outlined in Table \ref{table:lorenz_params}. Also
 shown in Table \ref{table:lorenz_params} are the values calculated by my
-Python module \echonn are listed. These values are not as accurate, but
-demonstrate the sufficient accuracy of \echonn.
+Python module \echonnsp are listed. These values 
+demonstrate the accuracy of \echonn.
 
 \begin{table}[H]
     \centering
@@ -312,6 +321,8 @@ demonstrate the sufficient accuracy of \echonn.
     }
     \label{table:lorenz_params}
 \end{table}
+
+% TODO: Graph of converging LCE
 
 The Lorenz system is named after its creator, but it is also known as the
 Lorenz butterfly due to the shape of the system. The Lorenz Butterfly can be
@@ -342,7 +353,7 @@ Poincaré's solutions, known as the circular restricted 3-body problem,
 demonstrates chaotic properties \cite{oestreicher2007history}. Poincaré
 performs several reductions of the original 3-body problem in order to come
 to a much more useful form of the problem. The mass of one of the objects is
-assumed to be negligible. This is the case for Sun-Earth-Moon orbits. The
+assumed to be negligible. This is the case for Sun-Earth-Moon orbits: the
 moon has little effect on the orbit of the sun. Another aspect is the
 rotating reference frame. Since the mass of one of the bodies is negligible,
 the problem simplifies to first solving a two body problem. While much easier
@@ -485,7 +496,8 @@ motion, so that isn't shown here.
 
 There are however two issues when integrating this problem. As objects
 approach each other, the distance between them approaches zero. If collision
-occurs, then this approaches infinity. There is no collision detection in
+occurs, then the diverging trajectory approaches infinity. There is
+no collision detection in
 this model, and each body has a radius of zero, so this case is not handled.
 Instead, a divide by zero error occurs, and the model cannot be calculated
 further.
@@ -518,7 +530,8 @@ be solved by using a symplectic integrator \cite{chambers1999hybrid}.
 
 While it is possible to use a symplectic integrator, it is not necessary.
 Under the right initial conditions, the third body can diverge regardless
-(fast initial velocity away from the bodies). The simple divergent spiral
+(e.g., fast initial velocity away from the bodies).
+The simple divergent spiral
 isn't chaotic, so instead orbital and collision less initial conditions will
 be used. Without divergence and without collisions, the symplectic integrator
 is unnecessary.
@@ -652,9 +665,10 @@ units, and from previous output units. Internal units are calculated from the
 values of the current input units, previous internal units, and previous
 output units.
 
-Although, it's rare that the output units are calculated from previous output
+Although, it's rare for the ESN that the output units are calculated
+directly from previous output
 units \cite{jaeger2002tutorial}. Sometimes for training, the output units are
-set to the value of $dv$, called teacher forcing, so that the model trains on
+set to the value of $\dv$, called teacher forcing, so that the model trains on
 actual values as opposed to its accumulated errors \cite{jaeger2002tutorial}.
 
 To calculate the value of a unit, an activation function is applied to a
@@ -713,13 +727,14 @@ $i = 1, 2, \dots, T$.
 \newcommand{\Wout}{\mathbf{W}_{out}}
 
 How the units are connected can vary, but the suggested way
-\cite{jaeger2002tutorial} is to connect the internal layer to the current
-input layer, the previous internal layer, and the previous output layer.
+\cite{jaeger2002tutorial} is to connect the current
+input layer, the previous internal layer, and the previous output layer to
+the internal layer.
 These connections will have weights described in \ref{sec:rnn}. Respectively,
 these weights will be denoted by the matrices: $\Win$, $\W$, and $\Wback$.
 The activation function for the internal layer is $\tanh$.
 
-The output layer is connected to the current input layer and current internal
+Connected to the output layer is the current input layer and current internal
 layer. Additionally, a bias input is connected to this layer. The weight for
 these connections will be denoted $\Wout$ (we only have one matrix since the
 connected layers are concatenated into a single vector, per Jaeger's notation
@@ -727,6 +742,12 @@ connected layers are concatenated into a single vector, per Jaeger's notation
 linear. Although, the recommended choice is $\tanh$, the output layer doesn't
 necessarily lie in the range of $\tanh$, so it can't be used without some
 form of normalization.
+
+The dimensions of the weight matrices are as follows:
+$\Win \in \mathbb{R}^{N \times K}$,
+$\W \in \mathbb{R}^{N \times N}$,
+$\Wback \in \mathbb{R}^{N \times L}$, and
+$\Wout \in \mathbb{R}^{N \times (K+1+N)}$,
 
 In mathematical notation, the model is defined as follows:
 
@@ -738,6 +759,10 @@ In mathematical notation, the model is defined as follows:
         \right) \\
     \yv(t_i) &= \Wout (\uv(t_i), 1, \xv(t_i))_{\text{concat}}.
 \end{align}
+
+"Feeding data" into the model means iterating using values for $\uv$. If the 
+feeding is teacher-forced, then the output layer's values are set to $\dv$. 
+Otherwise, the calculated output values are used.
 
 $\xv$ and $\yv$ are calculated from previous unit values but for the first
 time step, there are none, so we need to initialize the units to zeros
@@ -862,7 +887,7 @@ Since the spectral radius of $B$ is less than 1,
 \end{align*}
 
 This suggests that as the model iterates, the internal state converges to
-zero.
+zero. Also, $\tanh$ is contractive further supporting this idea.
 
 The rest of weights can be initialized however desired, so we will use a
 common technique.
@@ -907,23 +932,30 @@ three groups:
     $t_{T+1}, \dots, t_{T_f}$
 \end{enumerate}
 
-Second, the initialization data is fed into the model. This initializes the
+Second, the initialization data is fed into the model with teacher-forced 
+output. This initializes the
 inner state of the model, and the initial state (zeros) is lost due to the
 echo state property. $T_0$ should be chosen such that this is truly the case.
 Like $\alpha$, $T_0$ is a parameter of the echo state network and differs
 depending on the problem. Good values for $T_0$ are 10 to 500 depending on
 the problem complexity.
 
-Third, the training values are fed into the model to sample the network. We
-can store the input unit values, the internal state values, and the desired
-output values as matrices $M$ and $T$. $M$ will store the input unit values
-and internal state value pairs $(\uv(t_{T_0}), 1, \xv(t_{T_0})), \dots,
-(\uv(t_T), 1, \xv(t_T))$ in its rows. $T$ will store the output unit values
-$\dv(t_{T_0}), \dots, \dv(t_T)$.
+Third, the training values are fed into the model to sample the network with 
+teacher-forced output. We define a matrix $M$ to store the input unit values,
+bias, and internal state value pairs, $(\uv(t_{T_0}), 1, \xv(t_{T_0})), \dots,
+(\uv(t_T), 1, \xv(t_T))$, in its rows. We define a matrix $T$ to store the 
+output unit values: $\dv(t_{T_0}), \dots, \dv(t_T)$.
 
-To train the model, we want $\Wout M$ to approximate accurately $g^{-1}(T)$,
-where $g$ is the activation function for the output layer. Since we use an
-idempotent output layer activation function, $g^{-1}(T) = T$.
+To train the model, we want $g(\Wout M)$ to approximate accurately 
+$T$, where $g$ is the activation function for the output layer.
+Since we use an
+idempotent output layer activation function, $g^{-1}(X) = g(X) = X$, so
+
+\begin{align*}
+    g(\Wout M) &= T \\
+    \Wout M &= g^{-1}(T) \\
+    \Wout M &= T
+\end{align*}
 
 Therefore, $\Wout$ should be found such that $\Wout M = T$
 \cite{jaeger2002tutorial}. Solving for $\Wout$,
@@ -964,7 +996,7 @@ has a strong long term predictive power.
 First, data from the models is collected. Using the process described above
 (Section \ref{sec:calc_lya}), the Largest Lyapunov Exponent is calculated,
 $\lambda_1$. Then, the Lyapunov Time is calculated by $\frac{1}{\lambda_1}$.
-We will then integrate the model with an algorithm called RK4(5) over the
+We will then integrate the model with the algorithm RK4(5) over the
 interval $[0, \frac{50}{\lambda_1}]$ with time steps of $\frac{1}{100
 \lambda_1}$. This will result in 5,000 data points.
 
@@ -978,7 +1010,7 @@ The training set is used to train the model. The validation set is used to
 tune the parameters of the model ($\alpha, N, T_0$). The testing set is used
 to evaluate the performance.
 
-The first data point of the training set is $t_0 = 0$. The parameter $T_0$
+The first data point of the training set is $t = 0$. The parameter $T_0$
 marks where the model begins training on the data (see Section
 \ref{sec:etrain}). Using slightly different notation to account for the extra
 validation set, we will denote the first validation time point by $t = T$. We
@@ -1018,20 +1050,55 @@ model.
 
 However, the $\text{RMSE}_\text{test}$ is calculated slightly different since
 we want to know how far the model can predict before deviating too far. The
-$\text{RMSE}_\text{test}(t_f)$ will be calculated on the interval $[T_f,
-t_f)$ and the prediction uses teacher-forced values on $[0, T_f)$. Lastly,
-$\text{RMSE}_\text{test}$ will notate the RMSE for the entire test set.
+$\text{RMSE}_\text{test}(t)$ will be calculated on the interval $[T_f,
+t)$ and the prediction uses teacher-forced values on $[0, T_f)$. Lastly,
+$\text{RMSE}_\text{test}$ as a value instead of a function
+will notate the RMSE for the entire test set.
 
 We will look at how far past $T_f$ the ESN model's $\text{RMSE}_\text{test}$
-grows too large. The best model will be the model with the lowest Testing
-RMSE for the longest time.
+grows too large. The best model will be the model with the lowest validation 
+RMSE as well as a low testing RMSE.
 
 \subsection{Results}
+
+Overall, the systems proved too difficult to forecast; however, this could 
+be due to lacking data. While more data can generated, numerical errors might 
+grow too large. Since we have about 5,000 data points, we can't have an 
+internal state dimension of more than 500 or we risk over-fitting 
+\cite{jaeger2002tutorial}.
+
+The Lorenz model showed strong forecasting results, but due to the shape of 
+the attractor, it was easy for the small perturbations to cause quick 
+divergence as the trajectories followed the incorrect "wing" of the butterfly.
+
+The double pendulum model showed very poor results. Occasionally, the pendulum
+would move much quicker causing spikes in the data. The ESN tried to predict 
+when these spikes occurred, but was unable. Even the forecasted shape of the 
+rapid movement was inaccurate. This is likely due to the lack of data.
+
+The restricted circular three body problem performed much better than the
+other two, but this is due to the existence of a simple attractor: a single 
+circular orbit as opposed to two rings in the Lorenz system. Also, the max LCE
+was much smaller for this system (0.1759 vs 0.9 and 0.6) suggesting that it 
+was less chaotic. While
+it's possible that the chaotic behavior was created by the numerical
+solution, it suggests the strong predictability of lesser chaotic systems.
+
+In the case of researchers performing a similar analysis mentioned before 
+\cite{pathak2018model}, they too had strong performance for a less chaotic 
+problem. I wasn't able to predict 8 Lyapunov times, but there might be 
+reasons why my results weren't as strong other than the fact that
+the ESN might need more data that I used.
+The lorenz attractor is more chaotic than the attractor they used. The double 
+pendulum lacks an attractor and shows a higher level of chaos. The 3 body
+problem has a lower LCE and a simple attractor, and showed strong results as 
+well.
+
 \subsubsection{Lorenz}
 
-To integrate the model, I use the initial conditions: $(x_0, y_0, z_0) =
+To integrate the model, I use the initial conditions: $(x, y, z)_{t=0} =
 (-13.78990503, -11.6069343, 36.17332518)$. The calculated Lyapunov value was
-$0.9348566$.
+$\lambda_1 = 0.9348566$.
 
 One of the issues run into while forecasting with the Lorenz is that the
 continuous nature of the equation led to the ESN just outputing the previous
@@ -1090,7 +1157,7 @@ to achieve a better performance.
         \caption{RMSE Over Time}
         \label{fig:lorenz_r0_rmse}
     \end{subfigure}
-    \caption{The model diverges when entering never seen region.}
+    \caption{Diverges when entering space outside training data.}
     \label{fig:lorenz_r0}
 \end{figure}
 
@@ -1107,7 +1174,7 @@ to achieve a better performance.
         \caption{RMSE Over Time}
         \label{fig:lorenz_r1_rmse}
     \end{subfigure}
-    \caption{The model continues in wrong direction after intersection.}
+    \caption{Continues in wrong direction at intersection.}
     \label{fig:lorenz_r1}
 \end{figure}
 
@@ -1124,7 +1191,7 @@ to achieve a better performance.
         \caption{RMSE Over Time}
         \label{fig:lorenz_r2_rmse}
     \end{subfigure}
-    \caption{The model has completely deviated after an intersection.}
+    \caption{Deviates after an intersection.}
     \label{fig:lorenz_r2}
 \end{figure}
 
@@ -1141,7 +1208,7 @@ to achieve a better performance.
         \caption{RMSE Over Time}
         \label{fig:lorenz_r3_rmse}
     \end{subfigure}
-    \caption{Fits model really well, but follows wrong wings.}
+    \caption{Fits model well but follows wrong wings.}
     \label{fig:lorenz_r3}
 \end{figure}
 
@@ -1158,7 +1225,7 @@ to achieve a better performance.
         \caption{RMSE Over Time}
         \label{fig:lorenz_r4_rmse}
     \end{subfigure}
-    \caption{Fits model really well, but follows wrong wings.}
+    \caption{Fits model well but trajectory is ahead in time.}
     \label{fig:lorenz_r4}
 \end{figure}
 
@@ -1192,7 +1259,7 @@ to achieve a better performance.
         \caption{RMSE Over Time}
         \label{fig:lorenz_r6_rmse}
     \end{subfigure}
-    \caption{Doesn't fit model smoothy and eventually diverges.}
+    \caption{Diverges after intersection.}
     \label{fig:lorenz_r6}
 \end{figure}
 
@@ -1209,23 +1276,23 @@ to achieve a better performance.
         \caption{RMSE Over Time}
         \label{fig:lorenz_r7_rmse}
     \end{subfigure}
-    \caption{Sporadic behavior shown long after divergence.}
+    \caption{Sporadic behavior shown after divergence.}
     \label{fig:lorenz_r7}
 \end{figure}
 
 \subsubsection{Double Pendulum}
 
-The double pendulum's initial condition was
-
-\begin{equation}
-(\theta_1, \theta_2, \omega_1, \omega_2) 
-= (4.66648088, 4.29820501,
-8.01585663 \times 10^{-4}, 3.71175422 \times 10^{-3}).
-\end{equation}
-
 In this case, we need $\theta_1$ large enough that the system is chaotic, but
 the rest of the parameters were chosen randomly (with rotational velocities
-close to zero). The resulting Lyapunov Exponent is $0.60074$. Like the
+close to zero). The double pendulum's initial condition was
+
+\begin{equation}
+(\theta_1, \theta_2, \omega_1, \omega_2)_{t=0} 
+= (4.66648088, 4.29820501,
+8.01585663 \times 10^{-4}, 3.71175422 \times 10^{-3}),
+\end{equation}
+
+and the resulting Lyapunov Exponent is $\lambda_1 = 0.60074$. Like the
 Lorenz, the differences between time points were used to train the ESN since
 the ESN was showing poor results otherwise. As the pendulum kept looping the
 center, $\theta_1$ and $\theta_2$ kept growing; this shouldn't be an issue,
@@ -1233,18 +1300,20 @@ but using the differences keeps the system variables in a closer range.
 
 Figure \ref{fig:doub_pend_diff} shows a plot of each of the dataset's
 dimensions. It seems like the dataset's activity is fairly sparse. There is
-only gradual but seemingly random variations until a few spots around $t=10,
-30, 60, \text{and} 75$. The results for the ESN weren't very strong, and none 
+only gradual but seemingly random variations until a few spots around
+$t=10, 30, 60, \text{and } 75$. The results
+for the ESN weren't very strong, and none 
 could predict more than one Lyapunov Times before diverging.
 
 Because there are portions of the dataset which are calm, the ESN then has to
-pickup on signals which lead to the spikes in movement. We see the testing
-graph that while it predicts the testing set well, it eventually tries to
+pickup on signals which lead to the spikes in movement. We see in the 
+graphs that while it predicts the testing set well, it eventually tries to
 predict spikes but does so at the wrong time, and the spike pattern never
 ends, has too large of magnitude, and is very rapid. Overall the model
-performs poorly, and it's reflected in the RMSE. The likely reason for this
+performs poorly, and it's reflected in the RMSE which quickly diverges well above 3. The likely reason for this
 is that the ESN can't learn the complex patterns from such a small and sparse
-dataset.
+dataset. With more data or more complex internals, maybe the ESN could learn 
+to forecast this dataset.
 
 \begin{figure}[H]
     \centering
@@ -1332,37 +1401,42 @@ dataset.
 
 \subsubsection{Restricted Circular 3 Body}
 
-Generating data for the 3 body problem was more difficult since we have to becareful that the trajectory doesn't diverge or collide with the other bodies. 
+Generating data for the 3 body problem is more difficult since we have to be 
+careful that the trajectory doesn't diverge or collide with the other bodies. 
 
 When the bodies collide, then the problem becomes a stiff problem and the
 trajectory might be inaccurate, and when the bodies diverge, the trajectory
 becomes a simple spiral without chaotic properties. Initial conditions which
 don't run into these issues are usually orbital. Such solutions exist
-\cite{frnkacase}, and \texttt{echonn} finds them by randomly generating initial
-conditions, and testing for the conditions. Orbital patterns happen frequently
+\cite{frnkacase}, and \echonnsp finds them by randomly generating initial
+conditions, and testing for the conditions in the numerical solution.
+Orbital patterns happen frequently
 enough that they can be found easily with this method. 
 
 The case I analyze, the initial conditions were found to be 
 $(x, x', y, y')_{t=0} = (0.79563053, 0, 0, 0.96833226)$
-with a largest Lyapunov Exponent of 0.1759. This case is much different than 
+with a largest Lyapunov Exponent of $\lambda_1 = 0.1759$. This case is
+much different than 
 the other systems since it doesn't have strong chaotic properties. This can
-be seen in the orbital pattern which seems quasi-periodic, and it might be. 
+be seen in the orbital pattern which seems quasi-periodic (which it may be). 
 In light of this, it's also very possible that the measured chaotic properties
 are solely due to error in the numerical calculation. However, the orbiting
 doesn't repeat exactly, so there are still small complexities for the ESN
 to pick up on. In the results, we see that the ESN performs very well, but
 it's possible that the ESN is just converging to the mean of the orbits. 
-The steep increase in error and the subsequent slowing of increase in error
-seen in the graphs below suggests that this might be the case.
+The steep increase in error and the subsequent slowing of the increase
+in error, seen in the graphs below, suggests that this might be the case.
 Since the orbits are fairly close, this results in a sufficiently
 accurate approximation.
 
 Most RMSE graphs look very similar. There is a steep increase in RMSE at first
 but then it slows. Overall, the RMSE is really strong. Most don't rise above 
-0.2, and one show below (Figure \ref{fig:3brounded}) shows an RMSE not rising 
-above 0.1 despite its not as elliptical looking shape. Further, this model
+0.2, and one shown below (Figure \ref{fig:3brounded}) shows
+an RMSE not rising 
+above 0.1 despite its not as elliptical looking shape. Maybe this model
+is truly capturing the complexity of the system. Further, this model
 is impressive because it only has 5 internal units. Most other top performers 
-have over 100.
+have over 100 internal units.
 
 \begin{figure}[H]
     \centering
