@@ -60,16 +60,19 @@ for rank, i in enumerate(sorter[:how_many]):
     plt.savefig(os.path.join(dir_pre, name))
     plt.close()
 
-    runt['results'].t = ts_data.test_t
-    runt['results'].y = ds_test.T
+    #runt['results'].t = ts_data.test_t
+    #runt['results'].y = ds_test.T
+    #fig = slvr.plot3d(runt)
+    runt['results'].t = ts_data.test_t[:higher_score[i]+1]
+    runt['results'].y = ds_test[:higher_score[i]+1].T
     fig = slvr.plot3d(runt)
-    runt['results'].t = ts_data.test_t[:score[i]]
-    runt['results'].y = ys_test[:score[i]].T
+    #runt['results'].t = ts_data.test_t[:score[i]+1]
+    #runt['results'].y = ys_test[:score[i]+1].T
+    #slvr.plot3d(runt, fig)
+    runt['results'].t = ts_data.test_t[:higher_score[i]+1]
+    runt['results'].y = ys_test[:higher_score[i]+1].T
     slvr.plot3d(runt, fig)
-    runt['results'].t = ts_data.test_t[score[i]:higher_score[i]]
-    runt['results'].y = ys_test[score[i]:higher_score[i]].T
-    slvr.plot3d(runt, fig)
-    plt.legend(['actual', 'approximated', 'deviation'])
+    plt.legend(['actual', 'approximation'])
     title = 'ESN Trajectory\nParam {}\nTest RMSE {:.4}'
     param_title = '(α:{}, N:{}, T0:{})'.format(*results['params'][i])
     plt.title(title.format(param_title, total_rmse))
@@ -77,5 +80,5 @@ for rank, i in enumerate(sorter[:how_many]):
     name = 'rank_{}_param_{}_fit.png'.format(rank, i)
     plt.savefig(os.path.join(
         dir_pre, name))
-    plt.close()
     # plt.show(True)
+    plt.close()
