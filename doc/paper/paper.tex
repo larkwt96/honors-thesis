@@ -374,7 +374,7 @@ system. That is,
 
 \begin{equation}
    F_g^{(i)} = m_i \frac{\mathrm{d}^2 \rv_i}{\mathrm{dt}^2} =
-   \sum_{j \neq i} G \frac{m_i m_j \hat{\rv}_{ij}}{\norm{\rv_{ij}}^3}
+   \sum_{j \neq i} G \frac{m_i m_j \rv_{ij}}{\norm{\rv_{ij}}^3}
    \label{eq:nbody}
 \end{equation}
 
@@ -687,13 +687,13 @@ the same.
 
 For example, given some neural network model $\yv(\xv; \wv)$, where $\xv$ is
 known input data, $\wv$ is the model's parameters, and $\yv$ approximates
-some values, $\tv$, then we define an objective function as the sum of
+some values, $\dv$, then we define an objective function as the sum of
 squared error:
 
 \newcommand{\Ev}{\mathbf{E}}
 
 \begin{equation}
-    \Ev(\xv; \wv) = \vert \vert \yv(\xv; \wv) - \tv \vert \vert_2^2.
+    \Ev(\xv; \wv) = \vert \vert \yv(\xv; \wv) - \dv \vert \vert_2^2.
     \label{eq:error_eq_rnn}
 \end{equation}
 
@@ -941,9 +941,12 @@ depending on the problem. Good values for $T_0$ are 10 to 500 depending on
 the problem complexity.
 
 Third, the training values are fed into the model to sample the network with 
-teacher-forced output. We define a matrix $M$ to store the input unit values,
+teacher-forced output. We define a matrix
+$M \in \mathbb{R}^{(K + 1 + N) \times (T-T_0+1)}$
+to store the input unit values,
 bias, and internal state value pairs, $(\uv(t_{T_0}), 1, \xv(t_{T_0})), \dots,
-(\uv(t_T), 1, \xv(t_T))$, in its rows. We define a matrix $T$ to store the 
+(\uv(t_T), 1, \xv(t_T))$, in its columns. We define a matrix
+$T \in \mathbb{R}^{L \times (T-T_0+1)}$ to store the 
 output unit values: $\dv(t_{T_0}), \dots, \dv(t_T)$.
 
 To train the model, we want $g(\Wout M)$ to approximate accurately 
