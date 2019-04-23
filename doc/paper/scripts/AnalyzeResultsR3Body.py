@@ -8,9 +8,31 @@ from echonn.sys import SystemSolver
 
 res = pickle.load(open('rc3_body_results.p', 'rb'))
 run, lce, ts_data, results = res
+sys = run['system']
+slvr = SystemSolver(sys)
+
+# get img dir
+dir_pre = os.path.join('..', 'images', 'r3body')
 
 # print small details
 print('lce:', lce[0])
+# LCE
+lce_val, lce_run = lce
+T0 = 0
+t = lce_run['results'].t[T0:]
+y = lce_run['results'].y[:, T0:]
+lces = []
+for i, t_val in enumerate(t):
+    Df_y0 = y[sys.dim:, i].reshape(sys.dim, sys.dim)
+    lces.append(slvr.calc_lce(Df_y0, t_val))
+plt.figure()
+plt.title(f'Restricted 3 Body LCE ({lce_val:.3}) vs t')
+plt.xlabel('t')
+plt.ylabel('LCE')
+plt.plot(t, lces)
+plt.savefig(os.path.join(dir_pre, 'lce_converge.png'))
+exit()
+
 print('ic:', run['results'].y[:, 0])
 print('tf:', run['results'].t[-1])
 
@@ -25,9 +47,6 @@ def rmse(d, y):
     num_samples = d.shape[0]
     return np.sqrt(np.sum((d-y)**2) / num_samples)
 
-
-# get img dir
-dir_pre = os.path.join('..', 'images', 'r3body')
 
 # extract system and build solver
 sys = run['system']

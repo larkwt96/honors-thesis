@@ -8,8 +8,29 @@ from echonn.sys import SystemSolver
 
 res = pickle.load(open('doub_pend_results.p', 'rb'))
 run, lce, ts_data, results = res
+sys = run['system']
+slvr = SystemSolver(sys)
+dir_pre = os.path.join('..', 'images', 'doub_pend')
 
+# print small details
 print('lce:', lce[0])
+# LCE
+lce_val, lce_run = lce
+T0 = 0
+t = lce_run['results'].t[T0:]
+y = lce_run['results'].y[:, T0:]
+lces = []
+for i, t_val in enumerate(t):
+    Df_y0 = y[sys.dim:, i].reshape(sys.dim, sys.dim)
+    lces.append(slvr.calc_lce(Df_y0, t_val))
+plt.figure()
+plt.title(f'Double Pendulum LCE ({lce_val:.3}) vs t')
+plt.xlabel('t')
+plt.ylabel('LCE')
+plt.plot(t, lces)
+plt.savefig(os.path.join(dir_pre, 'lce_converge.png'))
+exit()
+
 print(run['results'].y[:, 0])
 test_rmse = [rmse for _, _, _, (_, _, rmse) in results['best model rmse']]
 test_rmse = np.array(test_rmse)
@@ -29,7 +50,6 @@ for rmse_res in results['best model rmse']:
         if err > .05:
             score.append(sub)
             break
-dir_pre = os.path.join('..', 'images', 'doub_pend')
 slvr = SystemSolver(run['system'])
 runt = deepcopy(run)
 runt['results'].t = ts_data.t
