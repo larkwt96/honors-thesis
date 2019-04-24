@@ -43,13 +43,40 @@ This is a paper about chaos.
 %%% INTRODUCTION %%%
 \section{Introduction}
 
-Neural Networks are known to be able to approximate any function given enough
-data and time to train \cite{cybenko1989approximation}. In light of this, the
-hope is that a deep learning based model, the ESN, will outperform ARIMA.
+Chaotic dynamical systems have been an important area of study
+especially in fields of atmospheric sciences. However, mathematical
+models are not always available, and if they are, very small errors in
+measurements can amplify very quickly making the prediction useless.
 
-This is a paper about chaos.
-% TODO: Intro
-% TODO: mention \texttt{echonn}
+Deep learning techniques are known to be able to approximate any
+function given enough data and resources
+\cite{cybenko1989approximation}. 
+In light of this, the hope is that a deep learning based
+model, the Echo State Network, will be able to capture the 
+complexity of chaotic systems and forecast accurately.
+
+Using a tool created by me to perform the analysis, \echonn, I will
+explore this problem and apply the Echo State Network to three classic
+chaotic problems. The python module can numerically solve these 
+dynamical systems, provides an echo state network implemented by me,
+and has classes to help with experimentation and visualization.
+
+One of the first chaotic systems is
+Henri Poincaré's solution to the restricted circular three body
+problem, a very useful simplification of the popular three body
+problem \cite{chenciner2015poincare}. The second system will be the
+Lorenz equation, researched by the father of chaos, Edward Lorenz
+\cite{lorenz1963deterministic}. 
+The system is commonly known as the Lorenz Butterfly for its shape, and
+it's the origin of the butterfly effect commonly used in pop culture.
+The last dynamical system is the double pendulum. This system is very
+commonly cited for its very random looking behavior despite being a
+completely deterministic system.
+
+Chaos of the systems will be measured using the systems' maximum
+Lyapunov Characteristic Exponents, and data for the systems is
+collected from numerical solutions of the dynamical system's governing
+ODE equations and randomly generated initial conditions.
 
 %%% CHAOS %%%
 \section{Chaos}
@@ -322,7 +349,12 @@ demonstrate the accuracy of \echonn.
     \label{table:lorenz_params}
 \end{table}
 
-% TODO: Graph of converging LCE
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.6\linewidth]{doc/paper/images/lorenz/lce_converge.png}
+    \caption{Convergence of LCE with large $t$}
+    \label{fig:lce_conv_lorenz}
+\end{figure}
 
 The Lorenz system is named after its creator, but it is also known as the
 Lorenz butterfly due to the shape of the system. The Lorenz Butterfly can be
@@ -330,12 +362,12 @@ seen in Figure \ref{fig:lorenz_butter}.
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.6\textwidth}
+    \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{images/lorenz_nd_plot.png}
         \caption{Plot of each dimension of Lorenz System}
         \label{fig:lorenz_nd}
     \end{subfigure}
-    \begin{subfigure}[b]{0.6\textwidth}
+    \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{images/lorenz_3d_plot.png}
         \caption{The Lorenz Butterfly}
         \label{fig:lorenz_3d}
@@ -348,7 +380,7 @@ seen in Figure \ref{fig:lorenz_butter}.
 
 The 3-body problem, or the generalized n-body problem, is a famous problem
 which many have analyzed; most notably, Herni Poincaré wrote many papers
-developing the area significantly \cite{chenciner2000remarkable}. One of
+developing the area significantly \cite{chenciner2015poincare}. One of
 Poincaré's solutions, known as the circular restricted 3-body problem,
 demonstrates chaotic properties \cite{oestreicher2007history}. Poincaré
 performs several reductions of the original 3-body problem in order to come
@@ -366,7 +398,7 @@ orbiting around those in a two dimensional plane.
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 \newcommand{\rv}{\mathbf{r}}
 
-The N body problem is defined as follows \cite{chenciner2000remarkable}:
+The N body problem is defined as follows \cite{chenciner2015poincare}:
 
 Let $\rv_i$ be the position of the $i^\text{th}$ body in the N body problem.
 Then, the force of gravity is the sum of gravity from every other body in the
@@ -380,6 +412,40 @@ system. That is,
 
 where $\rv_{ij} = \rv_j - \rv_i$, $m_i$ is the mass of body $i$, and $G$ is
 the gravitational constant.
+
+An interesting solution (originally calculated by Carles Simó) can be
+found where the trajectories of the bodies
+are periodic and form a figure 8 \cite{chenciner2000remarkable}.
+
+The gravitational constant, $G$ was redefined to equal 1, the masses of the 
+objects were equal to 1, and the initial conditions are as follows:
+
+\begin{align*}
+    \rv_1 &= (0.97000436, -0.24308753) \\
+    \rv_2 &= -\rv_1 \\
+    \rv_3 &= (0, 0) \\
+    \rv_1' &= -\rv_3 / 2 \\
+    \rv_2' &= -\rv_3 / 2 \\
+    \rv_3' &= (-0.93240737, -0.86473146) \\
+\end{align*}
+
+However, the resulting solution doesn't demonstrate chaotic properties. The LCE 
+convergence chart (Figure \ref{fig:lce_fig_8}) shows the LCE converging to zero.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/3body/fig8_short.png}
+        \caption{Figure 8 solution to 3 body problem}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\linewidth]{doc/paper/images/3body/lce_converge.png}
+        \caption{Nonchaotic LCE convergence}
+        \label{fig:lce_fig_8}
+    \end{subfigure}
+    \caption{Nonchaotic Figure 8 Solution to 3 Body}
+\end{figure}
 
 For our purposes, the reduced system is more useful since it is much easier
 to calculate than numerically solving the original 3-body problem. With three
@@ -422,7 +488,7 @@ that said, I believe the math is reliable, and the simulations seem to work
 and at least demonstrate chaotic properties (the only requirement for this
 project). With my lacking physics knowledge, I was unable to derive these
 equations myself from the assumptions made by Henri Poincaré outlined in
-\cite{chenciner2000remarkable}.
+\cite{chenciner2015poincare}.
 
 If we define the following system:
 
@@ -1117,10 +1183,19 @@ case, the rings intersect (See figure \ref{fig:lorenz_diff}).
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.5\linewidth]{doc/paper/images/lorenz/full_differential.png}
-    \caption{A plot of the differences between time steps of an approximation of the Lorenz Butterfly}
-    \label{fig:lorenz_diff}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\linewidth]{doc/paper/images/lorenz/full_differential.png}
+        \caption{A plot of the differences between time steps}
+        \label{fig:lorenz_diff}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/lorenz/lce_converge.png}
+        \caption{LCE converges to 0.935 for the Lorenz system}
+    \end{subfigure}
+    \caption{The difference butterfly and LCE convergence}
 \end{figure}
+
 
 After this transformation of the data, the model performed significantly
 better. $\text{RMSE}_\text{test}$ dropped to ranges of 1-2, the model
@@ -1320,9 +1395,17 @@ to forecast this dataset.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.5\linewidth]{doc/paper/images/doub_pend/full_differential.png}
-    \caption{The entire difference dataset}
-    \label{fig:doub_pend_diff}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\linewidth]{doc/paper/images/doub_pend/full_differential.png}
+        \caption{A plot of the differences between time steps}
+        \label{fig:doub_pend_diff}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/doub_pend/lce_converge.png}
+        \caption{LCE converges to 0.601 for the Double Pendulum system}
+    \end{subfigure}
+    \caption{The difference graph and LCE convergence}
 \end{figure}
 
 \begin{figure}[H]
@@ -1443,8 +1526,16 @@ have over 100 internal units.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.5\linewidth]{doc/paper/images/r3body/full_differential.png}
-    \caption{The entire difference dataset}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\linewidth]{doc/paper/images/r3body/full_differential.png}
+        \caption{A plot of the trajectory of third body}
+    \end{subfigure}
+    ~
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{doc/paper/images/r3body/lce_converge.png}
+        \caption{The LCE is 0.176 for the Restricted 3 Body Problem}
+    \end{subfigure}
+    \caption{The orbital pattern of the restricted 3 body problem}
 \end{figure}
 
 \begin{figure}[H]
@@ -1524,9 +1615,48 @@ have over 100 internal units.
     \caption{A top performer on validation set}
 \end{figure}
 
-
 %% CONCLUSION %%%
 \section{Conclusion}
+
+The degree of chaotic behavior was measured by the largest Lyapunov
+Characteristic Exponent of the system, and three dynamical systems were
+used: Lorenz's convection equation, the Double Pendulum system,
+and Henri Poincaré's solution to the Restricted Circular Three Body
+Problem. The performance of the Echo State Network was determined from
+RMSE of the trajectory after some time. The number of the Lyapunov
+times that the model was able to predict accurately determined strength
+of the ESN.
+
+The Lorenz equation's trajectory was reported to have an LCE of 0.935,
+and the predictability of the model was around 1 Lyapunov time for the
+best performers. In general, the ESN forecasted poorly on the Lorenz
+model due to the shape of the attractor. The ESN struggled to predict
+accurately which "wing" to follow and usually diverged at the
+intersection point.
+
+The double pendulum performed the worst with an LCE of 0.601.
+Its best predictors were
+unable to predict at least one Lyapunov time. Much of the pendulums'
+motion was small with occasionally very large spikes of motion. There
+wasn't enough data for the ESN to capture the complexity of the signals
+which trigger the large spikes of motion. When the ESN begins to
+predict spikes (often incorrectly), the RMSE increases significantly.
+It did however produce the correlation found between dimensions, so
+some of the pendulum's patterns were captured successfully.
+
+The restricted three body problem performed very well with a much
+smaller LCE value of 0.176. Similar to the Lorenz, there was an
+apparent pattern, but in this case, only a single point for the
+trajectory to orbit around. Due to this, the performance of the ESN was
+much better. Unbias testing RMSE would remain below 0.1 for several 
+Lyapunov times, similar to the results of another paper with a small 
+maximum LCE value.
+
+It's possible that the ESN model needs more data to train on, or 
+other methods need to be applied to improve the model's performance,
+but it seems that highly chaotic systems can't be predicted very
+easily, but lesser chaotic systems with attractor patterns can be
+forecasted with more success.
 
 \bibliography{references}
 \bibliographystyle{unsrt}
