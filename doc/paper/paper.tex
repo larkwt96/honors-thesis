@@ -38,18 +38,18 @@
 
 \begin{abstract}
 
-The predictive power of the recurrent neural networks known as the Echo
-State Network is not as strong for chaotic problems. Measured by
+The predictive power of the recurrent neural network known as the Echo
+State Network is not very strong for very chaotic problems. Measured by
 Lyapunov Characteristic Exponents (LCE), a time series forecasting 
 analysis was applied to highly chaotic systems: Lorenz System, Double
 Pendulum, and Poincaré's solution to the restricted circular three body
 problem. The Lorenz system had an LCE of 0.935 with a predictability
 length of 1 Lyapunov time. The double pendulum had an LCE of 0.601, and
 a predictability length of less than 1 Lyapunov time. The restricted
-circular three body problem solution had an LCE of 0.176 and a
-predictability power as strong as 10 Lyapunov times. 
+circular three body problem solution had an LCE of 0.176, much less
+chaotic, and a predictability power as strong as 10 Lyapunov times. 
 Other methods may be applied to improve the results, but in general
-it seems the predictability is very low for very chaotic systems.
+it seems the predictability is very low for more chaotic systems.
 
 \end{abstract}
 
@@ -195,7 +195,13 @@ denoted $\lambda_1$, is calculated as follows:
 \end{equation}
 
 where $\sigma_1$ is the first singular value of the matrix $\frac{\partial
-\xv(t)}{\partial \xv_0}$ and $\log$ is the natural logarithm. Since we can
+\xv(t)}{\partial \xv_0}$ and $\log$ is the natural logarithm. The notation of 
+$\frac{\partial \xv(t)}{\partial \xv_0}$, to me, is unfamiliar. I
+believe $\xv_0$ is a vector representing the initial conditions,
+but not a specific point in $\mathbb{R}^n$, since that
+would leave the partial derivative meaningless. Regardless, it will
+be defined as the matrix obtained from the calculation outlined below.
+Since we can
 only numerically approximate the limit for $\lambda_1$, we will need to use a
 sufficiently large $t$ until the limit converges to the accuracy we need.
 
@@ -203,7 +209,7 @@ In order to calculate $\frac{\partial \xv(t)}{\partial \xv_0}$, we need to
 integrate the matrix differential equation:
 
 \begin{equation}
-    \der{\Mv(t)} = \frac{\partial \fv}{\partial \xv} \Mv(t)
+    \der{\Mv(t)} = \frac{\partial \fv }{\partial \xv}(\xv(t)) \Mv(t)
     \label{eq:lce_mat_diffeq}
 \end{equation}
 
